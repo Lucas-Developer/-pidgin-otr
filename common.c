@@ -431,45 +431,61 @@ otrg_prefs_buddy_save(PurpleBuddy *buddy, gboolean usedefault,
 	otrg_dialog_resensitize_all();
 }
 
-void
-otrg_buddy_get_prefs(OtrgUiPrefs *prefsp, PurpleAccount *account,
-	const char *name)
+OtrlPolicy
+otrg_buddy_prefs_get_policy(PurpleAccount *account, const char *name)
 {
 	const gchar *proto;
 	PurpleBuddy *buddy;
-	gboolean p_enabled, p_automatic, p_onlyprivate, p_avoidloggingotr;
+	gboolean p_enabled, p_automatic, p_onlyprivate;
 	gboolean _unused;
 
-	prefsp->policy = OTRL_POLICY_DEFAULT;
-	prefsp->avoid_logging_otr = FALSE;
-
 	proto = purple_account_get_protocol_id(account);
-	if (!otrg_plugin_proto_supports_otr(proto)) {
-		prefsp->policy = OTRL_POLICY_NEVER;
-		prefsp->avoid_logging_otr = TRUE;
-		return;
-	}
+	if (!otrg_plugin_proto_supports_otr(proto))
+		return OTRL_POLICY_NEVER;
 
 	buddy = purple_blist_find_buddy(account, name);
 	if (buddy) {
 		otrg_prefs_buddy_load(buddy, &_unused, &p_enabled,
-			&p_automatic, &p_onlyprivate, &p_avoidloggingotr);
+			&p_automatic, &p_onlyprivate, &_unused);
 	} else {
-		otrg_prefs_global_load(&p_enabled, &p_automatic, &p_onlyprivate,
+		otrg_prefs_global_load(&p_enabled, &p_automatic,
+			&p_onlyprivate, &_unused);
+	}
+
+	if (!p_enabled)
+		return OTRL_POLICY_NEVER;
+	if (p_automatic && p_onlyprivate)
+		return OTRL_POLICY_ALWAYS;
+	if (p_automatic)
+		return OTRL_POLICY_OPPORTUNISTIC;
+	return OTRL_POLICY_MANUAL;
+}
+
+gboolean
+otrg_buddy_prefs_get_avoid_logging(PurpleAccount *account, const char *name)
+{
+	const gchar *proto;
+	PurpleBuddy *buddy;
+	gboolean p_enabled, p_avoidloggingotr;
+	gboolean _unused;
+
+	proto = purple_account_get_protocol_id(account);
+	if (!otrg_plugin_proto_supports_otr(proto))
+		return TRUE;
+
+	buddy = purple_blist_find_buddy(account, name);
+	if (buddy) {
+		otrg_prefs_buddy_load(buddy, &_unused, &p_enabled,
+			&_unused, &_unused, &p_avoidloggingotr);
+	} else {
+		otrg_prefs_global_load(&p_enabled, &_unused, &_unused,
 			&p_avoidloggingotr);
 	}
 
-	if (p_enabled) {
-		if (p_automatic && p_onlyprivate)
-			prefsp->policy = OTRL_POLICY_ALWAYS;
-		else if (p_automatic)
-			prefsp->policy = OTRL_POLICY_OPPORTUNISTIC;
-		else
-			prefsp->policy = OTRL_POLICY_MANUAL;
-		prefsp->avoid_logging_otr = p_avoidloggingotr;
-	} else {
-		prefsp->policy = OTRL_POLICY_NEVER;
-	}
+	if (p_enabled)
+		return p_avoidloggingotr;
+	else
+		return OTRL_POLICY_NEVER;
 }
 
 PurpleBuddy *

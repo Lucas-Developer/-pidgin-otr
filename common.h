@@ -35,12 +35,6 @@
 typedef struct _OtrgFingerprintClone OtrgFingerprintClone;
 typedef struct _OtrgContextClone OtrgContextClone;
 
-/* Global and per-buddy preferences */
-typedef struct {
-	OtrlPolicy policy;
-	gboolean avoid_logging_otr;
-} OtrgUiPrefs; /* TODO: rename it to OtrgPrefs? */
-
 OtrgFingerprintClone *
 otrg_fingerprint_clone(Fingerprint *fprint);
 
@@ -119,9 +113,11 @@ void
 otrg_prefs_buddy_save(PurpleBuddy *buddy, gboolean usedefault, gboolean enabled,
 	gboolean automatic, gboolean onlyprivate, gboolean avoidloggingotr);
 
-void
-otrg_buddy_get_prefs(OtrgUiPrefs *prefsp, PurpleAccount *account,
-	const char *name);
+OtrlPolicy
+otrg_buddy_prefs_get_policy(PurpleAccount *account, const char *name);
+
+gboolean
+otrg_buddy_prefs_get_avoid_logging(PurpleAccount *account, const char *name);
 
 PurpleBuddy *
 otrg_purple_conversation_get_buddy(PurpleConversation *conv);

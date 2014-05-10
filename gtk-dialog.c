@@ -2760,7 +2760,6 @@ static void otrg_gtk_dialog_new_purple_conv(PurpleConversation *conv)
 
     PurpleAccount *account;
     const char *name;
-    OtrgUiPrefs prefs;
 
     GHashTable * conv_or_ctx_map;
     GHashTable * ctx_to_idx_map;
@@ -2774,13 +2773,10 @@ static void otrg_gtk_dialog_new_purple_conv(PurpleConversation *conv)
     /* Do nothing if this isn't an IM conversation */
     if (purple_conversation_get_type(conv) != PURPLE_CONV_TYPE_IM) return;
 
-    /* Get the prefs */
+    /* OTR is disabled for this buddy */
     account = purple_conversation_get_account(conv);
     name = purple_conversation_get_name(conv);
-    otrg_buddy_get_prefs(&prefs, account, name);
-
-    /* OTR is disabled for this buddy */
-    if (prefs.policy == OTRL_POLICY_NEVER) {
+    if (otrg_buddy_prefs_get_policy(account, name) == OTRL_POLICY_NEVER) {
 	otr_destroy_top_menu_objects(conv);
 	return;
     }
@@ -2918,16 +2914,13 @@ static void dialog_resensitize(PurpleConversation *conv)
     PurpleConnection *connection;
     GtkWidget *button;
     const char *name;
-    OtrgUiPrefs prefs;
 
     /* Do nothing if this isn't an IM conversation */
     if (purple_conversation_get_type(conv) != PURPLE_CONV_TYPE_IM) return;
 
     account = purple_conversation_get_account(conv);
     name = purple_conversation_get_name(conv);
-    otrg_buddy_get_prefs(&prefs, account, name);
-
-    if (prefs.policy == OTRL_POLICY_NEVER) {
+    if (otrg_buddy_prefs_get_policy(account, name) == OTRL_POLICY_NEVER) {
 	otrg_gtk_dialog_remove_conv(conv);
     } else {
 	otrg_gtk_dialog_new_conv(conv);

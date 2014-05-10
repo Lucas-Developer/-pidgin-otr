@@ -186,16 +186,15 @@ static void log_message(void *opdata, const char *message)
 static OtrlPolicy policy_cb(void *opdata, ConnContext *context)
 {
     PurpleAccount *account;
-    OtrlPolicy policy = OTRL_POLICY_DEFAULT;
-    OtrgUiPrefs prefs;
 
-    if (!context) return policy;
+    if (!context)
+	return OTRL_POLICY_DEFAULT;
 
     account = purple_accounts_find(context->accountname, context->protocol);
-    if (!account) return policy;
+    if (!account)
+	return OTRL_POLICY_DEFAULT;
 
-    otrg_buddy_get_prefs(&prefs, account, context->username);
-    return prefs.policy;
+    return otrg_buddy_prefs_get_policy(account, context->username);
 }
 
 /*** asynchronous private key generation ****************************/
@@ -982,11 +981,9 @@ void otrg_plugin_send_default_query(ConnContext *context, void *vaccount)
 {
     PurpleAccount *account = vaccount;
     char *msg;
-    OtrgUiPrefs prefs;
 
-    otrg_buddy_get_prefs(&prefs, account, context->username);
     msg = otrl_proto_default_query_msg(context->accountname,
-	    prefs.policy);
+	    otrg_buddy_prefs_get_policy(account, context->username));
     otrg_plugin_inject_message(account, context->username,
 	    msg ? msg : "?OTRv23?");
     free(msg);
@@ -999,14 +996,13 @@ void otrg_plugin_send_default_query_conv(PurpleConversation *conv)
     PurpleAccount *account;
     const char *username, *accountname;
     char *msg;
-    OtrgUiPrefs prefs;
 
     account = purple_conversation_get_account(conv);
     accountname = purple_account_get_username(account);
     username = purple_conversation_get_name(conv);
 
-    otrg_buddy_get_prefs(&prefs, account, username);
-    msg = otrl_proto_default_query_msg(accountname, prefs.policy);
+    msg = otrl_proto_default_query_msg(accountname,
+	otrg_buddy_prefs_get_policy(account, username));
     otrg_plugin_inject_message(account, username, msg ? msg : "?OTRv23?");
     free(msg);
 }
@@ -1121,12 +1117,13 @@ static void process_conv_updated(PurpleConversation *conv,
      * and we don't want them to. */
     if (type == PURPLE_CONV_UPDATE_LOGGING) {
 	ConnContext *context;
-	OtrgUiPrefs prefs;
 	PurpleAccount *account = purple_conversation_get_account(conv);
-	otrg_buddy_get_prefs(&prefs, account, purple_conversation_get_name(conv));
+	gboolean avoid_logging;
 
+	avoid_logging = otrg_buddy_prefs_get_avoid_logging(account,
+	    purple_conversation_get_name(conv));
 	context = otrg_plugin_conv_to_selected_context(conv, 0);
-	if (context && prefs.avoid_logging_otr &&
+	if (context && avoid_logging &&
 		context->msgstate == OTRL_MSGSTATE_ENCRYPTED &&
 		purple_conversation_is_logging(conv)) {
 	    purple_conversation_set_logging(conv, FALSE);
