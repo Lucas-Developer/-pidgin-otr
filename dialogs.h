@@ -58,6 +58,8 @@ typedef struct {
 
     void (*verify_fingerprint)(Fingerprint *fprint);
 
+    void (*verify_method_selection)(ConnContext *context);
+
     void (*socialist_millionaires)(ConnContext *context, char *question,
 	    gboolean responder);
 
@@ -137,6 +139,9 @@ void otrg_dialog_unknown_fingerprint(OtrlUserState us, const char *accountname,
 
 /* Show a dialog asking the user to verify the given fingerprint. */
 void otrg_dialog_verify_fingerprint(Fingerprint *fprint);
+
+/* Show a dialog asking the user about verification method */
+void otrg_dialog_verify_method_selection(ConnContext *context);
 
 /* Show a dialog asking the user to give an SMP secret. */
 void otrg_dialog_socialist_millionaires(ConnContext *context);

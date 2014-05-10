@@ -1328,6 +1328,20 @@ static void otrg_gtk_dialog_verify_fingerprint(Fingerprint *fprint)
     verify_fingerprint(NULL, fprint);
 }
 
+static void otrg_gtk_dialog_verify_method_selection(ConnContext *context)
+{
+    char *primary;
+
+    if (context == NULL) return;
+
+    primary = g_strdup_printf(_("Authenticate %s"), context->username);
+
+    create_smp_dialog(_("Authenticate Buddy"),
+	primary, context, FALSE, NULL);
+
+    g_free(primary);
+}
+
 /* Create the SMP dialog.  responder is true if this is called in
  * response to someone else's run of SMP. */
 static void otrg_gtk_dialog_socialist_millionaires(ConnContext *context,
@@ -1611,7 +1625,7 @@ static void socialist_millionaires(GtkWidget *widget, gpointer data)
     if (context == NULL || context->msgstate != OTRL_MSGSTATE_ENCRYPTED)
 	return;
 
-    otrg_gtk_dialog_socialist_millionaires(context, NULL, FALSE);
+    otrg_dialog_verify_method_selection(context);
 }
 
 static void menu_whatsthis(GtkWidget *widget, gpointer data)
@@ -3063,6 +3077,7 @@ static const OtrgDialogUiOps gtk_dialog_ui_ops = {
     otrg_gtk_dialog_private_key_wait_start,
     otrg_gtk_dialog_private_key_wait_done,
     otrg_gtk_dialog_verify_fingerprint,
+    otrg_gtk_dialog_verify_method_selection,
     otrg_gtk_dialog_socialist_millionaires,
     otrg_gtk_dialog_update_smp,
     otrg_gtk_dialog_connected,

@@ -134,6 +134,12 @@ void otrg_dialog_verify_fingerprint(Fingerprint *fprint)
     ui_ops->verify_fingerprint(fprint);
 }
 
+/* Show a dialog asking the user about verification method */
+void otrg_dialog_verify_method_selection(ConnContext *context)
+{
+    ui_ops->verify_method_selection(context);
+}
+
 /* Show a dialog asking the user to give an SMP secret. */
 void otrg_dialog_socialist_millionaires(ConnContext *context)
 {
