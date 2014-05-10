@@ -1030,10 +1030,10 @@ static void otrg_gtk_dialog_notify_message(PurpleNotifyMsgType type,
     create_dialog(NULL, type, title, primary, secondary, 1, NULL, NULL, NULL);
 }
 
-struct s_OtrgDialogWait {
+typedef struct {
     GtkWidget *dialog;
     GtkWidget *label;
-};
+} OtrgDialogWaitHandleGtk;
 
 /* Put up a Please Wait dialog, with the "OK" button desensitized.
  * Return a handle that must eventually be passed to
@@ -1049,7 +1049,7 @@ static OtrgDialogWaitHandle otrg_gtk_dialog_private_key_wait_start(
     const char *protocol_print;
     GtkWidget *label;
     GtkWidget *dialog;
-    OtrgDialogWaitHandle handle;
+    OtrgDialogWaitHandleGtk *handle;
 
     p = purple_find_prpl(protocol);
     protocol_print = (p ? p->info->name : _("Unknown"));
@@ -1060,7 +1060,7 @@ static OtrgDialogWaitHandle otrg_gtk_dialog_private_key_wait_start(
 
     dialog = create_dialog(NULL, PURPLE_NOTIFY_MSG_INFO, title, primary,
 	    secondary, 0, &label, NULL, NULL);
-    handle = malloc(sizeof(struct s_OtrgDialogWait));
+    handle = g_new0(OtrgDialogWaitHandleGtk, 1);
     handle->dialog = dialog;
     handle->label = label;
 
@@ -1094,8 +1094,9 @@ static int otrg_gtk_dialog_display_otr_message(const char *accountname,
 }
 
 /* End a Please Wait dialog. */
-static void otrg_gtk_dialog_private_key_wait_done(OtrgDialogWaitHandle handle)
+static void otrg_gtk_dialog_private_key_wait_done(OtrgDialogWaitHandle _handle)
 {
+    OtrgDialogWaitHandleGtk *handle = _handle;
     const char *oldmarkup;
     char *newmarkup;
 

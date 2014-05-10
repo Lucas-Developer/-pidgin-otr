@@ -35,7 +35,7 @@
 #define SESSIONS_HELPURL      BASE_HELPURL "sessions.php"
 
 
-typedef struct s_OtrgDialogWait *OtrgDialogWaitHandle;
+typedef gpointer OtrgDialogWaitHandle;
 
 typedef void (*OtrgDialogCancelCb)(gpointer user_data);
 
