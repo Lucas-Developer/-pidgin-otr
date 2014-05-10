@@ -60,8 +60,7 @@ typedef struct {
 
     void (*verify_method_selection)(ConnContext *context);
 
-    void (*socialist_millionaires)(ConnContext *context, char *question,
-	    gboolean responder);
+    void (*socialist_millionaires)(ConnContext *context, char *question);
 
     void (*update_smp)(ConnContext *context, OtrlSMPEvent smp_event,
 	    double progress_level);

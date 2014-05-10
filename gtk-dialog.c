@@ -1345,13 +1345,13 @@ static void otrg_gtk_dialog_verify_method_selection(ConnContext *context)
 /* Create the SMP dialog.  responder is true if this is called in
  * response to someone else's run of SMP. */
 static void otrg_gtk_dialog_socialist_millionaires(ConnContext *context,
-	char *question, gboolean responder)
+	char *question)
 {
     char *primary;
 
     if (context == NULL) return;
 
-    if (responder && question) {
+    if (question) {
 	primary = g_strdup_printf(_("Authentication from %s"),
 	    context->username);
     } else {
@@ -1360,7 +1360,7 @@ static void otrg_gtk_dialog_socialist_millionaires(ConnContext *context,
     }
 
     create_smp_dialog(_("Authenticate Buddy"),
-	    primary, context, responder, question);
+	    primary, context, TRUE, question);
 
     g_free(primary);
 }

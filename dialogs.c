@@ -143,7 +143,7 @@ void otrg_dialog_verify_method_selection(ConnContext *context)
 /* Show a dialog asking the user to give an SMP secret. */
 void otrg_dialog_socialist_millionaires(ConnContext *context)
 {
-    ui_ops->socialist_millionaires(context, NULL, TRUE);
+    ui_ops->socialist_millionaires(context, NULL);
 }
 
 /* Show a dialog asking the user to give an SMP secret, prompting with a
@@ -151,7 +151,7 @@ void otrg_dialog_socialist_millionaires(ConnContext *context)
 void otrg_dialog_socialist_millionaires_q(ConnContext *context,
 	char *question)
 {
-    ui_ops->socialist_millionaires(context, question, TRUE);
+    ui_ops->socialist_millionaires(context, question);
 }
 
 /* Update the status of an ongoing socialist millionaires protocol. */
