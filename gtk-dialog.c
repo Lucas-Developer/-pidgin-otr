@@ -211,7 +211,7 @@ static GtkWidget *otr_icon(GtkWidget *image, TrustLevel level,
     } else {
 	image = gtk_image_new_from_pixbuf(pixbuf);
     }
-    gdk_pixbuf_unref(pixbuf);
+    g_object_unref(pixbuf);
 
     gtk_widget_set_sensitive (image, sensitivity);
 
@@ -1440,8 +1440,6 @@ static void otrg_gtk_dialog_socialist_millionaires(ConnContext *context,
 	char *question, gboolean responder)
 {
     char *primary;
-    PurplePlugin *p;
-    char *proto_name;
 
     if (context == NULL) return;
 
@@ -1452,10 +1450,6 @@ static void otrg_gtk_dialog_socialist_millionaires(ConnContext *context,
 	primary = g_strdup_printf(_("Authenticate %s"),
 	    context->username);
     }
-
-    p = purple_find_prpl(context->protocol);
-    proto_name = (p && p->info->name) ? p->info->name : _("Unknown");
-
 
     create_smp_dialog(_("Authenticate Buddy"),
 	    primary, context, responder, question);
