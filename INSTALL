@@ -19,8 +19,7 @@ COMPILING (non-Win32)
 If you're got a CVS copy, you will need to regenerate the configure
 script using:
 
-    intltoolize --force --copy
-    autoreconf -s -i
+    ./autogen.sh
 
 [If you installed libotr.m4 somewhere that autoreconf can't find it,
 you can try putting "ACLOCAL_FLAGS= -I /path/to/share/aclocal" at the
