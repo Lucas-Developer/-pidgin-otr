@@ -1437,7 +1437,7 @@ static void otrg_gtk_dialog_connected(ConnContext *context)
     char *buf;
     char *format_buf;
     TrustLevel level;
-    gboolean * is_multi_inst;
+    gboolean is_multi_inst;
 
     conv = otrg_plugin_context_to_conv(context, TRUE);
     level = otrg_plugin_context_to_trust(context);
@@ -1477,10 +1477,9 @@ static void otrg_gtk_dialog_connected(ConnContext *context)
 
     dialog_update_label(context);
 
-    is_multi_inst = (gboolean *) purple_conversation_get_data(conv,
-	    "otr-conv_multi_instances");
+    is_multi_inst = otrg_conversation_is_multi_instance(conv);
 
-    if (*is_multi_inst) {
+    if (is_multi_inst) {
 	gboolean * have_warned_instances = (gboolean *)
 		purple_conversation_get_data(conv, "otr-warned_instances");
 
@@ -2149,10 +2148,9 @@ static void select_menu_ctx(GtkWidget *widget, gpointer data)
     PurpleConversation *conv = otrg_plugin_context_to_conv(context, 1);
     ConnContext *recent_context = (ConnContext *) otrg_plugin_conv_to_context(
 	    conv, (otrl_instag_t)OTRL_INSTAG_RECENT_RECEIVED, 0);
-    gboolean *is_multi_instance = purple_conversation_get_data(conv,
-		    "otr-conv_multi_instances");
+    gboolean is_multi_inst = otrg_conversation_is_multi_instance(conv);
 
-    if (is_multi_instance && *is_multi_instance) {
+    if (is_multi_inst) {
 	otrg_conversation_set_selected_instag(conv, context->their_instance);
 	unselect_meta_ctx(conv);
     }
@@ -2160,7 +2158,7 @@ static void select_menu_ctx(GtkWidget *widget, gpointer data)
     pidgin_conv_switch_active_conversation(conv);
     dialog_update_label(context);
 
-    if (is_multi_instance && *is_multi_instance && context != recent_context) {
+    if (is_multi_inst && context != recent_context) {
 	gchar *buf = g_strdup_printf(_("Warning: The selected outgoing OTR "
 		"session (%u) is not the most recently active one (%u). "
 		"Your buddy may not receive your messages. Use the icon menu "
@@ -2484,7 +2482,7 @@ static void otr_add_buddy_top_menus(PurpleConversation *conv)
 	char * username = NULL;
 	const char * accountname = NULL;
 	int num_contexts = 0;
-	gboolean * is_multi_instance;
+	gboolean is_multi_inst = FALSE;
 
 	currentConv = list_iter->data;
 
@@ -2502,12 +2500,6 @@ static void otr_add_buddy_top_menus(PurpleConversation *conv)
 	}
 
 	num_contexts = g_list_length(contexts);
-
-	is_multi_instance = purple_conversation_get_data(currentConv,
-		    "otr-conv_multi_instances");
-	if (is_multi_instance) {
-	    *is_multi_instance = FALSE;
-	}
 
 	if (num_contexts > 1) {
 	    /* We will need the master context */
@@ -2566,7 +2558,7 @@ static void otr_add_buddy_top_menus(PurpleConversation *conv)
 
 	} else {
 	    /* Multi-instances */
-	    *is_multi_instance = TRUE;
+	    is_multi_inst = TRUE;
 	    otr_add_buddy_instances_top_menu(gtkconv, contexts, active_conv,
 		    currentContext->username, currentContext->accountname,
 		    &pos);
@@ -2575,6 +2567,8 @@ static void otr_add_buddy_top_menus(PurpleConversation *conv)
 	if (contexts) {
 	    g_list_free(contexts);
 	}
+
+	otrg_conversation_set_multi_instance(conv, is_multi_inst);
     }
 
     g_hash_table_destroy (conv_to_context_map);
@@ -2655,7 +2649,6 @@ static void conversation_destroyed(PurpleConversation *conv, void *data)
     GHashTable * conv_or_ctx_map;
     GHashTable * conv_to_idx_map;
     gint * max_instance_idx;
-    gboolean * is_conv_multi_instance;
     gboolean * have_warned_instances;
 
     if (menu) gtk_object_destroy(GTK_OBJECT(menu));
@@ -2669,12 +2662,6 @@ static void conversation_destroyed(PurpleConversation *conv, void *data)
     max_instance_idx = purple_conversation_get_data(conv, "otr-max_idx");
     if (max_instance_idx) {
 	g_free(max_instance_idx);
-    }
-
-    is_conv_multi_instance = purple_conversation_get_data(conv,
-	    "otr-conv_multi_instances");
-    if (is_conv_multi_instance) {
-	g_free(is_conv_multi_instance);
     }
 
     have_warned_instances = purple_conversation_get_data(conv,
@@ -2695,7 +2682,6 @@ static void conversation_destroyed(PurpleConversation *conv, void *data)
     purple_conversation_set_data(conv, "otr-convorctx", NULL);
     purple_conversation_set_data(conv, "otr-conv_to_idx", NULL);
     purple_conversation_set_data(conv, "otr-max_idx", NULL);
-    purple_conversation_set_data(conv, "otr-conv_multi_instances", NULL);
     purple_conversation_set_data(conv, "otr-warned_instances", NULL);
 
     otrg_conversation_cleanup_vars(conv);
@@ -2737,7 +2723,6 @@ static void otrg_gtk_dialog_new_purple_conv(PurpleConversation *conv)
     GHashTable * ctx_to_idx_map;
 
     gint * max_instance_idx;
-    gboolean * is_conv_multi_instance;
     gboolean * have_warned_instances;
     gboolean show_otr_button;
 
@@ -2795,11 +2780,6 @@ static void otrg_gtk_dialog_new_purple_conv(PurpleConversation *conv)
     *max_instance_idx = 0;
     purple_conversation_set_data(conv, "otr-max_idx",
 	    (gpointer)max_instance_idx);
-
-    is_conv_multi_instance = g_malloc(sizeof(gboolean));
-    *is_conv_multi_instance = FALSE;
-    purple_conversation_set_data(conv, "otr-conv_multi_instances",
-	    (gpointer)is_conv_multi_instance);
 
     have_warned_instances = g_malloc(sizeof(gboolean));
     *have_warned_instances = FALSE;
