@@ -1,10 +1,11 @@
-AM_CFLAGS=	@LIBGCRYPT_CFLAGS@ @LIBOTR_CFLAGS@ @GLIB_CFLAGS@ @PURPLE_CFLAGS@
-AM_CFLAGS += \
+AM_CFLAGS = \
+	@LIBGCRYPT_CFLAGS@ @LIBOTR_CFLAGS@ \
+	@GLIB_CFLAGS@ @PURPLE_CFLAGS@ \
 	-DPURPLE_PLUGINS \
 	-DPIDGIN_OTR_VERSION=\"@VERSION@\" \
 	-DLOCALEDIR=\"$(datadir)/locale\"
 
-SUBDIRS=	po
+SUBDIRS = po
 
 if FOR_LIBPURPLE3
 plugindir = ${libdir}/purple-3
@@ -13,7 +14,7 @@ else
 plugindir = ${libdir}/pidgin
 endif
 
-plugin_LTLIBRARIES=	pidgin-otr.la
+plugin_LTLIBRARIES = pidgin-otr.la
 
 pidgin_otr_la_SOURCES = \
 	common.c \
@@ -21,8 +22,9 @@ pidgin_otr_la_SOURCES = \
 	otr-plugin.c \
 	ui.c
 
-pidgin_otr_la_LDFLAGS=	-module -avoid-version
-pidgin_otr_la_LDFLAGS+=	@LIBGCRYPT_LIBS@ @LIBOTR_LIBS@ @PURPLE_LIBS@
+pidgin_otr_la_LDFLAGS = \
+	-module -avoid-version \
+	@LIBGCRYPT_LIBS@ @LIBOTR_LIBS@ @PURPLE_LIBS@
 
 EXTRA_DIST = \
 	INSTALL.mingw \
@@ -54,8 +56,9 @@ pidgin_otr_la_SOURCES += \
 	gtk-dialog.c \
 	gtk-ui.c \
 	tooltipmenu.c
-AM_CFLAGS += -DUSING_GTK
-AM_CFLAGS += @GTK_CFLAGS@
+AM_CFLAGS += \
+	-DUSING_GTK \
+	@GTK_CFLAGS@
 else
 EXTRA_DIST += \
 	gtk-dialog.c \
