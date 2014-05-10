@@ -52,9 +52,9 @@ const OtrgDialogUiOps *otrg_dialog_get_ui_ops(void)
 }
 
 /* Initialize the OTR dialog subsystem */
-void otrg_dialog_init(void)
+gboolean otrg_dialog_init(void)
 {
-    ui_ops->init();
+    return ui_ops->init();
 }
 
 /* Deinitialize the OTR dialog subsystem */

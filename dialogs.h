@@ -40,7 +40,7 @@ typedef gpointer OtrgDialogWaitHandle;
 typedef void (*OtrgDialogCancelCb)(gpointer user_data);
 
 typedef struct {
-    void (*init)(void);
+    gboolean (*init)(void);
 
     void (*cleanup)(void);
 
@@ -87,7 +87,7 @@ void otrg_dialog_set_ui_ops(const OtrgDialogUiOps *ops);
 const OtrgDialogUiOps *otrg_dialog_get_ui_ops(void);
 
 /* Initialize the OTR dialog subsystem */
-void otrg_dialog_init(void);
+gboolean otrg_dialog_init(void);
 
 /* Deinitialize the OTR dialog subsystem */
 void otrg_dialog_cleanup(void);

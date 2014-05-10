@@ -1383,6 +1383,8 @@ static void otrg_free_mms_table()
     mms_table = NULL;
 }
 
+static gboolean otr_plugin_unload(PurplePlugin *handle);
+
 static gboolean otr_plugin_load(PurplePlugin *handle)
 {
     gchar *privkeyfile = g_build_filename(purple_user_dir(), PRIVKEYFNAME,
@@ -1507,7 +1509,10 @@ static gboolean otr_plugin_load(PurplePlugin *handle)
 	    otrg_plugin_handle, PURPLE_CALLBACK(supply_extended_menu), NULL);
 
     otrg_ui_init();
-    otrg_dialog_init();
+    if (!otrg_dialog_init()) {
+	otr_plugin_unload(handle);
+	return 0;
+    }
 
     purple_conversation_foreach(process_conv_create);
 

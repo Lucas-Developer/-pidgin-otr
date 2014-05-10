@@ -2971,7 +2971,7 @@ static void dialog_quitting(void)
 }
 
 /* Initialize the OTR dialog subsystem */
-static void otrg_gtk_dialog_init(void)
+static gboolean otrg_gtk_dialog_init(void)
 {
     otr_win_menus = g_hash_table_new(g_direct_hash, g_direct_equal);
     otr_win_status = g_hash_table_new_full(g_direct_hash, g_direct_equal, NULL,
@@ -3014,6 +3014,8 @@ static void otrg_gtk_dialog_init(void)
     purple_signal_connect(purple_get_core(),
 	    "quitting", otrg_plugin_handle,
 	    PURPLE_CALLBACK(dialog_quitting), NULL);
+
+    return TRUE;
 }
 
 /* Deinitialize the OTR dialog subsystem */
