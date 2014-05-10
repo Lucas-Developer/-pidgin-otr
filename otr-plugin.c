@@ -538,13 +538,51 @@ static void write_fingerprints_cb(void *opdata)
     otrg_dialog_resensitize_all();
 }
 
+static void conv_logging_stop(ConnContext *context)
+{
+    PurpleConversation *conv;
+    gboolean avoid_logging;
+
+    conv = otrg_plugin_context_to_conv(context, FALSE);
+    if (!conv)
+	return;
+
+    avoid_logging = otrg_buddy_prefs_get_avoid_logging(
+	purple_conversation_get_account(conv), context->username);
+    if (!avoid_logging)
+	return;
+
+    if (!purple_conversation_is_logging(conv))
+	return;
+
+    otrg_conversation_set_logging_was_enabled(conv, TRUE);
+    purple_conversation_set_logging(conv, FALSE);
+}
+
+static void conv_logging_revert(ConnContext *context)
+{
+    PurpleConversation *conv;
+
+    conv = otrg_plugin_context_to_conv(context, FALSE);
+    if (!conv)
+	return;
+
+    if (!otrg_conversation_was_logging_enabled(conv))
+	return;
+
+    purple_conversation_set_logging(conv, TRUE);
+    otrg_conversation_set_logging_was_enabled(conv, FALSE);
+}
+
 static void gone_secure_cb(void *opdata, ConnContext *context)
 {
+    conv_logging_stop(context);
     otrg_dialog_connected(context);
 }
 
 static void gone_insecure_cb(void *opdata, ConnContext *context)
 {
+    conv_logging_revert(context);
     otrg_dialog_disconnected(context);
 }
 
@@ -1162,6 +1200,7 @@ void otrg_plugin_disconnect_all_instances(ConnContext *context)
 {
     otrl_message_disconnect_all_instances(otrg_plugin_userstate, &ui_ops, NULL,
 	    context->accountname, context->protocol, context->username);
+    conv_logging_revert(context);
 }
 
 /* Disconnect a context, sending a notice to the other side, if
@@ -1171,6 +1210,7 @@ void otrg_plugin_disconnect(ConnContext *context)
     otrl_message_disconnect(otrg_plugin_userstate, &ui_ops, NULL,
 	    context->accountname, context->protocol, context->username,
 	    context->their_instance);
+    conv_logging_revert(context);
 }
 
 /* Write the fingerprints to disk. */
