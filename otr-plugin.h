@@ -23,13 +23,7 @@
 #define __OTRG_OTR_PLUGIN_H__
 
 /* Purple headers */
-#include "account.h"
-#include "plugin.h"
-
-/* libotr headers */
-#include <libotr/context.h>
-#include <libotr/userstate.h>
-#include <libotr/instag.h>
+#include "version.h"
 
 #define PRIVKEYFNAME "otr.private_key"
 #define STOREFNAME "otr.fingerprints"

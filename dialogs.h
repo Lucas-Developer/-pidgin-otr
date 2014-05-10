@@ -22,9 +22,6 @@
 #ifndef __OTRG_DIALOGS_H__
 #define __OTRG_DIALOGS_H__
 
-/* pidgin headers */
-#include "notify.h"
-
 /* libotr headers */
 #include <libotr/proto.h>
 #include <libotr/message.h>

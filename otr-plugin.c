@@ -33,15 +33,12 @@
 #include <gcrypt.h>
 
 /* purple headers */
-#include "pidgin.h"
-#include "notify.h"
-#include "version.h"
-#include "util.h"
+#include "purple.h"
 #include "debug.h"
-#include "core.h"
 
 #ifdef USING_GTK
 /* purple GTK headers */
+#include "pidgin.h"
 #include "gtkplugin.h"
 #endif
 
@@ -78,7 +75,6 @@
 
 #ifdef USING_GTK
 /* purple-otr GTK headers */
-#include <glib.h>
 #include "gtk-ui.h"
 #include "gtk-dialog.h"
 
