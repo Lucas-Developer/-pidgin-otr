@@ -2075,7 +2075,10 @@ static void otr_add_top_otr_menu(PurpleConversation *conv)
 
     int pos = otr_get_menu_insert_pos(conv);
 
-    if (purple_conversation_get_type(conv) != PURPLE_CONV_TYPE_IM) return;
+    if (purple_conversation_get_type(conv) != PURPLE_CONV_TYPE_IM) {
+	otr_destroy_top_menu_objects(conv);
+	return;
+    }
 
     topmenuitem = gtk_menu_item_new_with_label ( "OTR" );
     topmenu = gtk_menu_new();
