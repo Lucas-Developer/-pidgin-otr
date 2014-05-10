@@ -2769,6 +2769,7 @@ static void otrg_gtk_dialog_new_purple_conv(PurpleConversation *conv)
     gboolean * is_conv_multi_instance;
     gboolean * have_warned_instances;
     otrl_instag_t * last_received_instance;
+    gboolean show_otr_button;
 
     /* Do nothing if this isn't an IM conversation */
     if (purple_conversation_get_type(conv) != PURPLE_CONV_TYPE_IM) return;
@@ -2784,6 +2785,12 @@ static void otrg_gtk_dialog_new_purple_conv(PurpleConversation *conv)
 	return;
     }
 
+    if (purple_prefs_exists("/OTR/showotrbutton")) {
+	show_otr_button = purple_prefs_get_bool("/OTR/showotrbutton");
+    } else {
+	show_otr_button = TRUE;
+    }
+
     bbox = gtkconv->toolbar;
 
     context = otrg_plugin_conv_to_selected_context(conv, 0);
@@ -2791,7 +2798,7 @@ static void otrg_gtk_dialog_new_purple_conv(PurpleConversation *conv)
     /* See if we're already set up */
     button = purple_conversation_get_data(conv, "otr-button");
     if (button) {
-	if (prefs.show_otr_button) {
+	if (show_otr_button) {
 	    /* Check if we've been removed from the bbox; purple does this
 	     * when the user changes her prefs for the style of buttons to
 	     * display. */
@@ -2841,7 +2848,7 @@ static void otrg_gtk_dialog_new_purple_conv(PurpleConversation *conv)
     button = gtk_button_new();
 
     gtk_button_set_relief(GTK_BUTTON(button), GTK_RELIEF_NONE);
-    if (prefs.show_otr_button) {
+    if (show_otr_button) {
 	gtk_box_pack_start(GTK_BOX(bbox), button, FALSE, FALSE, 0);
     }
 
@@ -2852,7 +2859,7 @@ static void otrg_gtk_dialog_new_purple_conv(PurpleConversation *conv)
     label = gtk_label_new(NULL);
     gtk_box_pack_start(GTK_BOX(bwbox), label, FALSE, FALSE, 0);
 
-    if (prefs.show_otr_button) {
+    if (show_otr_button) {
 	gtk_widget_show_all(button);
     }
 
