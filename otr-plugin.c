@@ -261,9 +261,6 @@ otrg_plugin_privkeygen_waitall(void)
 static void
 otrg_plugin_privkeygen_finish(OtrgPluginPrivkeygenData *tdata)
 {
-#ifndef WIN32
-    mode_t mask;
-#endif  /* WIN32 */
     FILE *key_fh;
     gchar *key_fname;
     gcry_error_t err;
@@ -273,17 +270,8 @@ otrg_plugin_privkeygen_finish(OtrgPluginPrivkeygenData *tdata)
 	purple_debug_fatal("otr", "out of memory building filenames!\n");
 	return;
     }
-#if 0
+
     key_fh = otrg_fopen_with_mask(key_fname, "w+b", 0077);
-#else
-#ifndef WIN32
-    mask = umask (0077);
-#endif  /* WIN32 */
-    key_fh = g_fopen(key_fname, "w+b");
-#ifndef WIN32
-    umask (mask);
-#endif  /* WIN32 */
-#endif
     g_free(key_fname);
 
     if (!key_fh) {
@@ -1188,19 +1176,12 @@ void otrg_plugin_disconnect(ConnContext *context)
 /* Write the fingerprints to disk. */
 void otrg_plugin_write_fingerprints(void)
 {
-#ifndef WIN32
-    mode_t mask;
-#endif  /* WIN32 */
     FILE *storef;
     gchar *storefile = g_build_filename(purple_user_dir(), STOREFNAME, NULL);
-#ifndef WIN32
-    mask = umask (0077);
-#endif  /* WIN32 */
-    storef = g_fopen(storefile, "wb");
-#ifndef WIN32
-    umask (mask);
-#endif  /* WIN32 */
+
+    storef = otrg_fopen_with_mask(storefile, "wb", 0077);
     g_free(storefile);
+
     if (!storef) return;
     otrl_privkey_write_fingerprints_FILEp(otrg_plugin_userstate, storef);
     fclose(storef);
