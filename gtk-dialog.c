@@ -228,10 +228,8 @@ static void message_response_cb(GtkDialog *dialog, gint id, GtkWidget *widget)
  * authvbox */
 static void verify_fingerprint(GtkWindow *parent, Fingerprint *fprint);
 static void add_vrfy_fingerprint(GtkWidget *vbox, void *data);
-static struct vrfy_fingerprint_data* vrfy_fingerprint_data_new(
-	Fingerprint *fprint);
 static void vrfy_fingerprint_destroyed(GtkWidget *w,
-	struct vrfy_fingerprint_data *vfd);
+	OtrgFingerprintClone *fpc);
 static void conversation_switched ( PurpleConversation *conv, void * data );
 
 static GtkWidget *create_smp_progress_dialog(GtkWindow *parent,
@@ -646,7 +644,7 @@ static void add_to_vbox_verify_fingerprint(GtkWidget *vbox,
 	    their_hash[OTRL_PRIVKEY_FPRINT_HUMAN_LEN];
     GtkWidget *label;
     char *label_text;
-    struct vrfy_fingerprint_data *vfd;
+    OtrgFingerprintClone *fpc;
     PurplePlugin *p;
     const char *proto_name;
     Fingerprint *fprint = context->active_fingerprint;
@@ -668,7 +666,7 @@ static void add_to_vbox_verify_fingerprint(GtkWidget *vbox,
     gtk_label_set_line_wrap(GTK_LABEL(label), TRUE);
     gtk_box_pack_start(GTK_BOX(vbox), label, FALSE, FALSE, 0);
 
-    vfd = vrfy_fingerprint_data_new(fprint);
+    fpc = otrg_fingerprint_clone(fprint);
 
     strncpy(our_hash, _("[none]"), 44);
     our_hash[44] = '\0';
@@ -696,9 +694,9 @@ static void add_to_vbox_verify_fingerprint(GtkWidget *vbox,
     gtk_misc_set_alignment(GTK_MISC(label), 0, 0);
     gtk_box_pack_start(GTK_BOX(vbox), label, FALSE, FALSE, 0);
 
-    add_vrfy_fingerprint(vbox, vfd);
+    add_vrfy_fingerprint(vbox, fpc);
     g_signal_connect(G_OBJECT(vbox), "destroy",
-	    G_CALLBACK(vrfy_fingerprint_destroyed), vfd);
+	    G_CALLBACK(vrfy_fingerprint_destroyed), fpc);
 }
 
 static void redraw_auth_vbox(GtkComboBox *combo, void *data)
@@ -1263,59 +1261,19 @@ static void dialog_update_label(ConnContext *context)
     dialog_update_label_conv(conv, level);
 }
 
-struct vrfy_fingerprint_data {
-    Fingerprint *fprint;   /* You can use this pointer right away, but
-			      you can't rely on it sticking around for a
-			      while.  Use the copied pieces below
-			      instead. */
-    char *accountname, *username, *protocol;
-    otrl_instag_t their_instance;
-    unsigned char fingerprint[20];
-};
-
-static void vrfy_fingerprint_data_free(struct vrfy_fingerprint_data *vfd)
-{
-    free(vfd->accountname);
-    free(vfd->username);
-    free(vfd->protocol);
-    free(vfd);
-}
-
-static struct vrfy_fingerprint_data* vrfy_fingerprint_data_new(
-	Fingerprint *fprint)
-{
-    struct vrfy_fingerprint_data *vfd;
-    ConnContext *context = fprint->context;
-
-    vfd = malloc(sizeof(*vfd));
-    vfd->fprint = fprint;
-    vfd->accountname = strdup(context->accountname);
-    vfd->username = strdup(context->username);
-    vfd->protocol = strdup(context->protocol);
-    vfd->their_instance = context->their_instance;
-    memmove(vfd->fingerprint, fprint->fingerprint, 20);
-
-    return vfd;
-}
-
 static void vrfy_fingerprint_destroyed(GtkWidget *w,
-	struct vrfy_fingerprint_data *vfd)
+	OtrgFingerprintClone *fpc)
 {
-    vrfy_fingerprint_data_free(vfd);
+    otrg_fingerprint_clone_free(fpc);
 }
 
 static void vrfy_fingerprint_changed(GtkComboBox *combo, void *data)
 {
-    struct vrfy_fingerprint_data *vfd = data;
-    ConnContext *context = otrl_context_find(otrg_plugin_userstate,
-	    vfd->username, vfd->accountname, vfd->protocol, vfd->their_instance,
-	    0, NULL, NULL, NULL);
+    OtrgFingerprintClone *fpc = data;
     Fingerprint *fprint;
     int oldtrust, trust;
 
-    if (context == NULL) return;
-
-    fprint = otrl_context_find_fingerprint(context, vfd->fingerprint, 0, NULL);
+    fprint = otrg_fingerprint_get_origin(fpc);
 
     if (fprint == NULL) return;
 
@@ -1339,11 +1297,14 @@ static void add_vrfy_fingerprint(GtkWidget *vbox, void *data)
 {
     GtkWidget *hbox;
     GtkWidget *combo, *label;
-    struct vrfy_fingerprint_data *vfd = data;
+    OtrgFingerprintClone *fpc = data;
+    Fingerprint *fprint;
     char *labelt;
     int verified = 0;
 
-    if (otrg_fingerprint_is_trusted(vfd->fprint)) {
+    fprint = otrg_fingerprint_get_origin(fpc);
+
+    if (otrg_fingerprint_is_trusted(fprint)) {
 	verified = 1;
     }
 
@@ -1364,12 +1325,12 @@ static void add_vrfy_fingerprint(GtkWidget *vbox, void *data)
     gtk_box_pack_start(GTK_BOX(vbox), hbox, FALSE, FALSE, 0);
 
     g_signal_connect(G_OBJECT(combo), "changed",
-	    G_CALLBACK(vrfy_fingerprint_changed), vfd);
+	    G_CALLBACK(vrfy_fingerprint_changed), fpc);
 
     hbox = gtk_hbox_new(FALSE, 0);
     /* 4th message */
     labelt = g_strdup_printf(_("fingerprint for %s."),
-	    vfd->username);
+	    fprint->context->username);
     label = gtk_label_new(labelt);
     g_free(labelt);
     gtk_box_pack_start(GTK_BOX(hbox), label, FALSE, FALSE, 0);
@@ -1386,7 +1347,7 @@ static void verify_fingerprint(GtkWindow *parent, Fingerprint *fprint)
 	    their_hash[OTRL_PRIVKEY_FPRINT_HUMAN_LEN];
     char *primary;
     char *secondary;
-    struct vrfy_fingerprint_data *vfd;
+    OtrgFingerprintClone *fpc;
     ConnContext *context;
     PurplePlugin *p;
     const char *proto_name;
@@ -1398,7 +1359,7 @@ static void verify_fingerprint(GtkWindow *parent, Fingerprint *fprint)
 
     primary = g_strdup_printf(_("Verify fingerprint for %s"),
 	    context->username);
-    vfd = vrfy_fingerprint_data_new(fprint);
+    fpc = otrg_fingerprint_clone(fprint);
 
     strncpy(our_hash, _("[none]"), 44);
     our_hash[44] = '\0';
@@ -1423,9 +1384,9 @@ static void verify_fingerprint(GtkWindow *parent, Fingerprint *fprint)
 
     dialog = create_dialog(parent, PURPLE_NOTIFY_MSG_INFO,
 	    _("Verify fingerprint"), primary, secondary, 1, NULL,
-	    add_vrfy_fingerprint, vfd);
+	    add_vrfy_fingerprint, fpc);
     g_signal_connect(G_OBJECT(dialog), "destroy",
-	    G_CALLBACK(vrfy_fingerprint_destroyed), vfd);
+	    G_CALLBACK(vrfy_fingerprint_destroyed), fpc);
 
     g_free(primary);
     g_free(secondary);
