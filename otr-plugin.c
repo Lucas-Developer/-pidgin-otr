@@ -197,52 +197,249 @@ static OtrlPolicy policy_cb(void *opdata, ConnContext *context)
     return prefs.policy;
 }
 
-/* Generate a private key for the given accountname/protocol */
-void otrg_plugin_create_privkey(const char *accountname,
-	const char *protocol)
+/*** asynchronous private key generation ****************************/
+
+typedef struct
 {
-    OtrgDialogWaitHandle waithandle;
+    GThread *thread;
+    void *new_key;
+    OtrgDialogWaitHandle wait_handle;
+    gboolean finished;
+} OtrgPluginPrivkeygenData;
+
+static GList *otrg_plugin_privkeygen_threads = NULL;
+static GList *otrg_plugin_privkeygen_zombies = NULL;
+static guint otrg_plugin_privkeygen_timer = 0;
+
+static void
+otrg_plugin_privkeygen_free(OtrgPluginPrivkeygenData *tdata)
+{
+    g_thread_join(tdata->thread);
+    g_free(tdata);
+}
+
+static void
+otrg_plugin_privkeygen_waitall(void)
+{
+    GList *it;
+
+    if (otrg_plugin_privkeygen_timer != 0) {
+	purple_timeout_remove(otrg_plugin_privkeygen_timer);
+	otrg_plugin_privkeygen_timer = 0;
+    }
+
+    if (!otrg_plugin_privkeygen_threads && !otrg_plugin_privkeygen_zombies)
+	return;
+    purple_debug_warning("otr", "waiting for background threads...");
+
+    it = otrg_plugin_privkeygen_threads;
+    otrg_plugin_privkeygen_threads = NULL;
+    while (it != NULL) {
+	OtrgPluginPrivkeygenData *tdata = it->data;
+	it = g_list_next(it);
+
+	g_thread_join(tdata->thread);
+	otrg_dialog_private_key_wait_done(tdata->wait_handle);
+	otrl_privkey_generate_cancelled(otrg_plugin_userstate, tdata->new_key);
+	g_free(tdata);
+     }
+
+    it = otrg_plugin_privkeygen_zombies;
+    otrg_plugin_privkeygen_zombies = NULL;
+    while (it != NULL) {
+	OtrgPluginPrivkeygenData *tdata = it->data;
+	it = g_list_next(it);
+
+	g_thread_join(tdata->thread);
+	otrl_privkey_generate_cancelled(otrg_plugin_userstate, tdata->new_key);
+	g_free(tdata);
+    }
+
+    purple_debug_info("otr", "all background threads finished...");
+}
+
+static void
+otrg_plugin_privkeygen_finish(OtrgPluginPrivkeygenData *tdata)
+{
 #ifndef WIN32
     mode_t mask;
 #endif  /* WIN32 */
-    FILE *privf;
+    FILE *key_fh;
+    gchar *key_fname;
+    gcry_error_t err;
 
-    gchar *privkeyfile = g_build_filename(purple_user_dir(),
-	    PRIVKEYFNAME, NULL);
-    if (!privkeyfile) {
-	fprintf(stderr, _("Out of memory building filenames!\n"));
+    key_fname = g_build_filename(purple_user_dir(), PRIVKEYFNAME, NULL);
+    if (!key_fname) {
+	purple_debug_fatal("otr", "out of memory building filenames!");
 	return;
     }
+#if 0
+    key_fh = otrg_fopen_with_mask(key_fname, "w+b", 0077);
+#else
 #ifndef WIN32
     mask = umask (0077);
 #endif  /* WIN32 */
-    privf = g_fopen(privkeyfile, "w+b");
+    key_fh = g_fopen(key_fname, "w+b");
 #ifndef WIN32
     umask (mask);
 #endif  /* WIN32 */
-    g_free(privkeyfile);
-    if (!privf) {
-	fprintf(stderr, _("Could not write private key file\n"));
+#endif
+    g_free(key_fname);
+
+    if (!key_fh) {
+	purple_debug_fatal("otr", "could not write private key file");
 	return;
     }
 
-    waithandle = otrg_dialog_private_key_wait_start(accountname, protocol);
+    err = otrl_privkey_generate_finish_FILEp(otrg_plugin_userstate,
+	tdata->new_key, key_fh);
+    fclose(key_fh);
 
-    /* Generate the key */
-    otrl_privkey_generate_FILEp(otrg_plugin_userstate, privf,
-	    accountname, protocol);
-    fclose(privf);
+    if (err) {
+	purple_debug_error("otr", "otrl_privkey_generate_finish_FILEp returned "
+	    "%d", err);
+    }
+
     otrg_ui_update_fingerprint();
 
     /* Mark the dialog as done. */
-    otrg_dialog_private_key_wait_done(waithandle);
+    otrg_dialog_private_key_wait_done(tdata->wait_handle);
+}
+
+static gboolean
+otrg_plugin_privkeygen_poll(gpointer _unused)
+{
+    GList *it;
+
+    it = otrg_plugin_privkeygen_threads;
+    while (it != NULL) {
+	GList *current = it;
+	OtrgPluginPrivkeygenData *tdata = it->data;
+	it = g_list_next(it);
+
+	if (!tdata->finished)
+	    continue;
+
+	purple_debug_info("otr", "finished thread %p", tdata->thread);
+
+	otrg_plugin_privkeygen_threads = g_list_delete_link(
+	    otrg_plugin_privkeygen_threads, current);
+
+	otrg_plugin_privkeygen_finish(tdata);
+	otrg_plugin_privkeygen_free(tdata);
+    }
+
+    it = otrg_plugin_privkeygen_zombies;
+    while (it != NULL) {
+	GList *current = it;
+	OtrgPluginPrivkeygenData *tdata = it->data;
+	it = g_list_next(it);
+
+	if (!tdata->finished)
+	    continue;
+
+	purple_debug_info("otr", "finished zombie thread %p", tdata->thread);
+
+	otrg_plugin_privkeygen_zombies = g_list_delete_link(
+	    otrg_plugin_privkeygen_zombies, current);
+
+	otrl_privkey_generate_cancelled(otrg_plugin_userstate, tdata->new_key);
+	otrg_plugin_privkeygen_free(tdata);
+    }
+
+    if (otrg_plugin_privkeygen_threads != NULL ||
+	otrg_plugin_privkeygen_zombies != NULL)
+    {
+	return TRUE;
+    }
+
+    otrg_plugin_privkeygen_timer = 0;
+    return FALSE;
+}
+
+static void
+otrg_plugin_privkeygen_cancel(gpointer _tdata)
+{
+    OtrgPluginPrivkeygenData *tdata = _tdata;
+
+    if (g_list_find(otrg_plugin_privkeygen_threads, tdata) == NULL) {
+	purple_debug_warning("otr", "Thread was already cancelled");
+	return;
+    }
+
+    otrg_plugin_privkeygen_threads = g_list_remove(
+	otrg_plugin_privkeygen_threads, tdata);
+    otrg_plugin_privkeygen_zombies = g_list_prepend(
+	otrg_plugin_privkeygen_zombies, tdata);
+}
+
+static gpointer
+otrg_plugin_privkeygen_thread(gpointer _tdata)
+{
+    OtrgPluginPrivkeygenData *tdata = _tdata;
+
+    otrl_privkey_generate_calculate(tdata->new_key);
+
+    tdata->finished = TRUE;
+    return NULL;
+}
+
+/* Generate a private key for the given accountname/protocol */
+void
+otrg_plugin_privkeygen_start(const char *accountname, const char *protocol)
+{
+    gcry_error_t err;
+    OtrgPluginPrivkeygenData *tdata;
+
+    tdata = g_new0(OtrgPluginPrivkeygenData, 1);
+
+    err = otrl_privkey_generate_start(otrg_plugin_userstate, accountname,
+	protocol, &tdata->new_key);
+    if ((err & GPG_ERR_CODE_MASK) == GPG_ERR_EEXIST) {
+	purple_debug_warning("otr", "Key exists or is generating");
+	return;
+    }
+    if (tdata->new_key == NULL) {
+	purple_debug_error("otr", "otrl_privkey_generate_start returned %#x",
+	    err);
+	return;
+    }
+
+#if 0
+    tdata->wait_handle = otrg_dialog_private_key_wait_start(accountname,
+	protocol, otrg_plugin_privkeygen_cancel, tdata);
+#else
+    tdata->wait_handle = otrg_dialog_private_key_wait_start(accountname,
+	protocol);
+    (void)otrg_plugin_privkeygen_cancel;
+#endif
+
+#if GLIB_CHECK_VERSION(2, 32, 0)
+    tdata->thread = g_thread_try_new("otr-key-generation",
+	otrg_plugin_privkeygen_thread, tdata, NULL);
+#else
+    tdata->thread = g_thread_create(otrg_plugin_privkeygen_thread,
+	tdata, TRUE, NULL);
+#endif
+
+    purple_debug_info("otr", "started thread %p", tdata->thread);
+
+    otrg_plugin_privkeygen_threads = g_list_prepend(
+	otrg_plugin_privkeygen_threads, tdata);
+
+    if (otrg_plugin_privkeygen_timer == 0) {
+        otrg_plugin_privkeygen_timer = purple_timeout_add(50,
+	    otrg_plugin_privkeygen_poll, NULL);
+    }
 }
 
 static void create_privkey_cb(void *opdata, const char *accountname,
 	const char *protocol)
 {
-    otrg_plugin_create_privkey(accountname, protocol);
+    otrg_plugin_privkeygen_start(accountname, protocol);
 }
+
+/*** asynchronous private key generation - end **********************/
 
 /* Generate a instance tag for the given accountname/protocol */
 void otrg_plugin_create_instag(const char *accountname,
@@ -1336,6 +1533,8 @@ static gboolean otr_plugin_unload(PurplePlugin *handle)
     void *core_handle = purple_get_core();
 
     /* Clean up all of our state. */
+
+    otrg_plugin_privkeygen_waitall();
 
     purple_conversation_foreach(otrg_dialog_remove_conv);
 
