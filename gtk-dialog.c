@@ -648,7 +648,7 @@ static void add_to_vbox_verify_fingerprint(GtkWidget *vbox,
     char *label_text;
     struct vrfy_fingerprint_data *vfd;
     PurplePlugin *p;
-    char *proto_name;
+    const char *proto_name;
     Fingerprint *fprint = context->active_fingerprint;
 
     if (fprint == NULL) return;
@@ -1387,7 +1387,7 @@ static void verify_fingerprint(GtkWindow *parent, Fingerprint *fprint)
     struct vrfy_fingerprint_data *vfd;
     ConnContext *context;
     PurplePlugin *p;
-    char *proto_name;
+    const char *proto_name;
 
     if (fprint == NULL) return;
     if (fprint->fingerprint == NULL) return;

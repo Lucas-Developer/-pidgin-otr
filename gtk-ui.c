@@ -177,7 +177,7 @@ static void otrg_gtk_ui_update_keylist(void)
 	    context = context->next) {
 	int i;
 	PurplePlugin *p;
-	char *proto_name;
+	const char *proto_name;
 
 	if (context->m_context != context) continue;
 
