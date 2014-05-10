@@ -504,12 +504,44 @@ static void update_context_list_cb(void *opdata)
     otrg_ui_update_keylist();
 }
 
+/* Inform the user that an unknown fingerprint was received. */
 static void confirm_fingerprint_cb(void *opdata, OtrlUserState us,
 	const char *accountname, const char *protocol, const char *username,
 	unsigned char fingerprint[20])
 {
-    otrg_dialog_unknown_fingerprint(us, accountname, protocol, username,
-	    fingerprint);
+    ConnContext *context;
+    gboolean seen_before = FALSE;
+    gchar *msg;
+
+    /* Figure out if this is the first fingerprint we've seen for this user. */
+    context = otrl_context_find(us, username, accountname, protocol,
+	OTRL_INSTAG_MASTER, 0, NULL, NULL, NULL);
+    if (context) {
+	Fingerprint *fp = context->fingerprint_root.next;
+	while (fp) {
+	    if (memcmp(fingerprint, fp->fingerprint, 20)) {
+		/* This is a previously seen fingerprint for this user different
+		 * from the one we were passed. */
+		seen_before = TRUE;
+		break;
+	    }
+	fp = fp->next;
+	}
+    }
+
+    if (seen_before) {
+	msg = g_strdup_printf(_("%s is contacting you from an unrecognized "
+	    "computer.  You should <a href=\"%s%s\">authenticate</a> this "
+	    "buddy."), username, AUTHENTICATE_HELPURL, _("?lang=en"));
+    } else {
+	msg = g_strdup_printf(_("%s has not been authenticated yet.  You should"
+	    " <a h7ref=\"%s%s\">authenticate</a> this buddy."), username,
+	    AUTHENTICATE_HELPURL, _("?lang=en"));
+    }
+
+    otrg_dialog_display_otr_message(accountname, protocol, username, msg, TRUE);
+
+    g_free(msg);
 }
 
 static void write_fingerprints_cb(void *opdata)

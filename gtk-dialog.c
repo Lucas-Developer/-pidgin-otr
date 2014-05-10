@@ -1110,52 +1110,6 @@ static void otrg_gtk_dialog_private_key_wait_done(OtrgDialogWaitHandle _handle)
     free(handle);
 }
 
-/* Inform the user that an unknown fingerprint was received. */
-static void otrg_gtk_dialog_unknown_fingerprint(OtrlUserState us,
-	const char *accountname, const char *protocol, const char *who,
-	unsigned char fingerprint[20])
-{
-    PurpleConversation *conv;
-    char *buf;
-    ConnContext *context;
-    int seenbefore = FALSE;
-
-    /* Figure out if this is the first fingerprint we've seen for this
-     * user. */
-    context = otrl_context_find(us, who, accountname, protocol,
-	    OTRL_INSTAG_MASTER, 0, NULL, NULL, NULL);
-
-    if (context) {
-	Fingerprint *fp = context->fingerprint_root.next;
-	while(fp) {
-	    if (memcmp(fingerprint, fp->fingerprint, 20)) {
-		/* This is a previously seen fingerprint for this user,
-		 * different from the one we were passed. */
-		seenbefore = TRUE;
-		break;
-	    }
-	    fp = fp->next;
-	}
-    }
-
-    if (seenbefore) {
-	buf = g_strdup_printf(_("%s is contacting you from an unrecognized "
-		    "computer.  You should <a href=\"%s%s\">authenticate</a> "
-		    "this buddy."), who, AUTHENTICATE_HELPURL, _("?lang=en"));
-    } else {
-	buf = g_strdup_printf(_("%s has not been authenticated yet.  You "
-		    "should <a href=\"%s%s\">authenticate</a> this buddy."),
-		who, AUTHENTICATE_HELPURL, _("?lang=en"));
-    }
-
-    conv = otrg_plugin_userinfo_to_conv(accountname, protocol, who, TRUE);
-
-    purple_conversation_write(conv, NULL, buf, PURPLE_MESSAGE_SYSTEM,
-	    time(NULL));
-
-    g_free(buf);
-}
-
 static void otrg_gtk_dialog_clicked_connect(GtkWidget *widget, gpointer data);
 
 static void build_otr_menu(ConvOrContext *convctx, GtkWidget *menu,
@@ -3241,7 +3195,6 @@ static const OtrgDialogUiOps gtk_dialog_ui_ops = {
     otrg_gtk_dialog_display_otr_message,
     otrg_gtk_dialog_private_key_wait_start,
     otrg_gtk_dialog_private_key_wait_done,
-    otrg_gtk_dialog_unknown_fingerprint,
     otrg_gtk_dialog_verify_fingerprint,
     otrg_gtk_dialog_socialist_millionaires,
     otrg_gtk_dialog_update_smp,

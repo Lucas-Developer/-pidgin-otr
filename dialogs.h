@@ -56,9 +56,6 @@ typedef struct {
 
     void (*private_key_wait_done)(OtrgDialogWaitHandle handle);
 
-    void (*unknown_fingerprint)(OtrlUserState us, const char *accountname,
-	const char *protocol, const char *who, unsigned char fingerprint[20]);
-
     void (*verify_fingerprint)(Fingerprint *fprint);
 
     void (*socialist_millionaires)(ConnContext *context, char *question,

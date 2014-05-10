@@ -128,14 +128,6 @@ void otrg_dialog_private_key_wait_done(OtrgDialogWaitHandle handle)
     ui_ops->private_key_wait_done(handle);
 }
 
-/* Show a dialog informing the user that a correspondent (who) has sent
- * us a Key Exchange Message (kem) that contains an unknown fingerprint. */
-void otrg_dialog_unknown_fingerprint(OtrlUserState us, const char *accountname,
-	const char *protocol, const char *who, unsigned char fingerprint[20])
-{
-    ui_ops->unknown_fingerprint(us, accountname, protocol, who, fingerprint);
-}
-
 /* Show a dialog asking the user to verify the given fingerprint. */
 void otrg_dialog_verify_fingerprint(Fingerprint *fprint)
 {
