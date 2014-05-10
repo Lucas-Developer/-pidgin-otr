@@ -405,14 +405,8 @@ otrg_plugin_privkeygen_start(const char *accountname, const char *protocol)
 	return;
     }
 
-#if 0
     tdata->wait_handle = otrg_dialog_private_key_wait_start(accountname,
 	protocol, otrg_plugin_privkeygen_cancel, tdata);
-#else
-    tdata->wait_handle = otrg_dialog_private_key_wait_start(accountname,
-	protocol);
-    (void)otrg_plugin_privkeygen_cancel;
-#endif
 
 #if GLIB_CHECK_VERSION(2, 32, 0)
     tdata->thread = g_thread_try_new("otr-key-generation",

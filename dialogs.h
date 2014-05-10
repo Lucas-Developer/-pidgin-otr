@@ -37,6 +37,8 @@
 
 typedef struct s_OtrgDialogWait *OtrgDialogWaitHandle;
 
+typedef void (*OtrgDialogCancelCb)(gpointer user_data);
+
 typedef struct {
     void (*init)(void);
 
@@ -50,7 +52,7 @@ typedef struct {
 	    const char *username, const char *msg, int force_create);
 
     OtrgDialogWaitHandle (*private_key_wait_start)(const char *account,
-	const char *protocol);
+	const char *protocol, OtrgDialogCancelCb cancel_cb, gpointer user_data);
 
     void (*private_key_wait_done)(OtrgDialogWaitHandle handle);
 
@@ -122,11 +124,11 @@ int otrg_dialog_display_otr_message(const char *accountname,
 	const char *protocol, const char *username, const char *msg,
 	int force_create);
 
-/* Put up a Please Wait dialog. This dialog can not be cancelled.
+/* Put up a Please Wait dialog.
  * Return a handle that must eventually be passed to
  * otrg_dialog_private_key_wait_done. */
 OtrgDialogWaitHandle otrg_dialog_private_key_wait_start(const char *account,
-	const char *protocol);
+	const char *protocol, OtrgDialogCancelCb cancel_cb, gpointer user_data);
 
 /* End a Please Wait dialog. */
 void otrg_dialog_private_key_wait_done(OtrgDialogWaitHandle handle);

@@ -1039,7 +1039,8 @@ struct s_OtrgDialogWait {
  * Return a handle that must eventually be passed to
  * otrg_dialog_private_key_wait_done. */
 static OtrgDialogWaitHandle otrg_gtk_dialog_private_key_wait_start(
-	const char *account, const char *protocol)
+	const char *account, const char *protocol, OtrgDialogCancelCb cancel_cb,
+	gpointer user_data)
 {
     PurplePlugin *p;
     const char *title = _("Generating private key");

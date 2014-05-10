@@ -116,9 +116,10 @@ int otrg_dialog_display_otr_message( const char *accountname,
  * Return a handle that must eventually be passed to
  * otrg_dialog_private_key_wait_done. */
 OtrgDialogWaitHandle otrg_dialog_private_key_wait_start(const char *account,
-	const char *protocol)
+	const char *protocol, OtrgDialogCancelCb cancel_cb, gpointer user_data)
 {
-    return ui_ops->private_key_wait_start(account, protocol);
+    return ui_ops->private_key_wait_start(account, protocol,
+	cancel_cb, user_data);
 }
 
 /* End a Please Wait dialog. */
