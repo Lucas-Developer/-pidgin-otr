@@ -1555,7 +1555,8 @@ static void otrg_gtk_dialog_connected(ConnContext *context)
     buf = g_strdup_printf(format_buf,
 		purple_conversation_get_name(conv),
 		context->protocol_version == 1 ? _("  Warning: using old "
-		"protocol version 1.") : "", conv->logging ?
+		"protocol version 1.") : "",
+		purple_conversation_is_logging(conv) ?
 		_("  Your client is logging this conversation.") :
 		_("  Your client is not logging this conversation."));
 
@@ -1942,14 +1943,15 @@ static void otr_build_status_submenu(PidginWindow *win,
 	return;
     }
 
-    text = g_strdup_printf("%s (%s)", conv->name,
-	    purple_account_get_username(conv->account));
+    text = g_strdup_printf("%s (%s)", purple_conversation_get_name(conv),
+	    purple_account_get_username(purple_conversation_get_account(conv)));
 
     buddy_name = gtk_image_menu_item_new_with_label(text);
     g_free(text);
 
     /* Create a pixmap for the protocol icon. */
-    pixbuf = pidgin_create_prpl_icon(conv->account, PIDGIN_PRPL_ICON_SMALL);
+    pixbuf = pidgin_create_prpl_icon(purple_conversation_get_account(conv),
+	PIDGIN_PRPL_ICON_SMALL);
 
     /* Now convert it to GtkImage */
     if (pixbuf == NULL) {
@@ -2118,9 +2120,11 @@ static GList* otr_get_full_buddy_list(PurpleConversation *conv)
     GSList *l, *buds;
 
     /* This code is derived from pidgin's 'generating sendto menu' stuff */
-    if ( gtkconv->active_conv->type == PURPLE_CONV_TYPE_IM ) {
-	buds = purple_find_buddies ( gtkconv->active_conv->account,
-		gtkconv->active_conv->name );
+    if ( purple_conversation_get_type(gtkconv->active_conv) ==
+	    PURPLE_CONV_TYPE_IM ) {
+	buds = purple_find_buddies (
+		purple_conversation_get_account(gtkconv->active_conv),
+		purple_conversation_get_name(gtkconv->active_conv) );
 
 	if ( buds == NULL
 		&& !g_list_find(conv_list, conv)) {  /* buddy not on list */

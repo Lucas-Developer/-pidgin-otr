@@ -938,7 +938,7 @@ static void process_conv_updated(PurpleConversation *conv,
 	context = otrg_plugin_conv_to_selected_context(conv, 0);
 	if (context && prefs.avoid_logging_otr &&
 		context->msgstate == OTRL_MSGSTATE_ENCRYPTED &&
-		conv->logging == TRUE) {
+		purple_conversation_is_logging(conv)) {
 	    purple_conversation_set_logging(conv, FALSE);
 	}
     }
@@ -990,7 +990,7 @@ static void supply_extended_menu(PurpleBlistNode *node, GList **menu)
 
     /* Extract the account, and then the protocol, for this buddy */
     buddy = (PurpleBuddy *)node;
-    acct = buddy->account;
+    acct = purple_buddy_get_account(buddy);
     if (acct == NULL) return;
     proto = purple_account_get_protocol_id(acct);
     if (!otrg_plugin_proto_supports_otr(proto)) return;
