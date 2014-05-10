@@ -1570,11 +1570,13 @@ static PidginPluginUiInfo ui_info =
 
 #define UI_INFO &ui_info
 #define PLUGIN_TYPE PIDGIN_PLUGIN_TYPE
+#define PREFS_INFO NULL
 
 #else
 
 #define UI_INFO NULL
-#define PLUGIN_TYPE ""
+#define PLUGIN_TYPE NULL
+#define PREFS_INFO NULL
 
 #endif
 
@@ -1582,8 +1584,8 @@ static PurplePluginInfo info =
 {
 	PURPLE_PLUGIN_MAGIC,
 
-	/* Use the 2.0.x API */
-	2,                                                /* major version  */
+	/* Use the correct API */
+	PURPLE_MAJOR_VERSION,                             /* major version  */
 	0,                                                /* minor version  */
 
 	PURPLE_PLUGIN_STANDARD,                           /* type           */
@@ -1608,7 +1610,7 @@ static PurplePluginInfo info =
 
 	UI_INFO,                                          /* ui_info        */
 	NULL,                                             /* extra_info     */
-	NULL,                                             /* prefs_info     */
+	PREFS_INFO,                                       /* prefs_info     */
 	NULL                                              /* actions        */
 };
 
