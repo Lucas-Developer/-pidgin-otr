@@ -82,3 +82,5 @@ void otrg_ui_get_prefs(OtrgUiPrefs *prefsp, PurpleAccount *account,
 	const char *name);
 
 #endif
+
+/* vim: set tabstop=8 softtabstop=4 shiftwidth=4 noexpandtab: */

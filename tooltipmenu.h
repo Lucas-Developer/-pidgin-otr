@@ -122,3 +122,5 @@ void tooltip_menu_set_tooltip(TooltipMenu *tooltip_menu, GtkWidget *widget, cons
 G_END_DECLS
 
 #endif /* PIDGIN_MENU_TRAY_H */
+
+/* vim: set tabstop=4 softtabstop=4 shiftwidth=4 noexpandtab: */

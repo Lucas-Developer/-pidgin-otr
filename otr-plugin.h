@@ -120,3 +120,5 @@ TrustLevel otrg_plugin_context_to_trust(ConnContext *context);
 int otrg_plugin_proto_supports_otr(const char *proto);
 
 #endif
+
+/* vim: set tabstop=8 softtabstop=4 shiftwidth=4 noexpandtab: */

@@ -1168,3 +1168,5 @@ const OtrgUiUiOps *otrg_gtk_ui_get_ui_ops(void)
 {
     return &gtk_ui_ui_ops;
 }
+
+/* vim: set tabstop=8 softtabstop=4 shiftwidth=4 noexpandtab: */

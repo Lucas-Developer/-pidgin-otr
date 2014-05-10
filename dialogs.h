@@ -180,3 +180,5 @@ void otrg_dialog_new_conv(PurpleConversation *conv);
 void otrg_dialog_remove_conv(PurpleConversation *conv);
 
 #endif
+
+/* vim: set tabstop=8 softtabstop=4 shiftwidth=4 noexpandtab: */

@@ -1465,3 +1465,5 @@ __init_plugin(PurplePlugin *plugin)
 }
 
 PURPLE_INIT_PLUGIN(otr, __init_plugin, info)
+
+/* vim: set tabstop=8 softtabstop=4 shiftwidth=4 noexpandtab: */

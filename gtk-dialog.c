@@ -3318,3 +3318,5 @@ const OtrgDialogUiOps *otrg_gtk_dialog_get_ui_ops(void)
 {
     return &gtk_dialog_ui_ops;
 }
+
+/* vim: set tabstop=8 softtabstop=4 shiftwidth=4 noexpandtab: */

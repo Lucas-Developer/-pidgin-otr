@@ -188,3 +188,5 @@ void otrg_ui_get_prefs(OtrgUiPrefs *prefsp, PurpleAccount *account,
     prefsp->avoid_logging_otr = TRUE;
     prefsp->show_otr_button = FALSE;
 }
+
+/* vim: set tabstop=8 softtabstop=4 shiftwidth=4 noexpandtab: */

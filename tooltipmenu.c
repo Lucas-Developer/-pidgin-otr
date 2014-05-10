@@ -251,3 +251,4 @@ tooltip_menu_set_tooltip(TooltipMenu *tooltip_menu, GtkWidget *widget, const cha
 	gtk_tooltips_set_tip(tooltip_menu->tooltips, widget, tooltip, NULL);
 }
 
+/* vim: set tabstop=4 softtabstop=4 shiftwidth=4 noexpandtab: */

@@ -165,3 +165,5 @@ if test x$enable_linker_hardening != xno; then
 fi
 
 AC_OUTPUT([Makefile po/Makefile.in])
+
+dnl vim: set tabstop=8 softtabstop=4 shiftwidth=4 expandtab:

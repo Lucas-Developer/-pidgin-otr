@@ -207,3 +207,5 @@ void otrg_dialog_remove_conv(PurpleConversation *conv)
 {
     ui_ops->remove_conv(conv);
 }
+
+/* vim: set tabstop=8 softtabstop=4 shiftwidth=4 noexpandtab: */
