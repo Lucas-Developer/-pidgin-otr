@@ -1018,6 +1018,24 @@ static void otrg_gtk_ui_config_buddy(PurpleBuddy *buddy)
     gtk_widget_show_all(dialog);
 }
 
+static void otr_options_cb(PurpleBlistNode *node, gpointer user_data)
+{
+    /* We've already checked PURPLE_BLIST_NODE_IS_BUDDY(node) */
+    PurpleBuddy *buddy = (PurpleBuddy *)node;
+
+    /* Modify the settings for this buddy */
+    otrg_ui_config_buddy(buddy);
+}
+
+static void otrg_gtk_ui_buddy_menu(PurpleBuddy *buddy, GList **menu)
+{
+    PurpleMenuAction *act;
+
+    act = purple_menu_action_new(_("OTR Settings"),
+	(PurpleCallback)otr_options_cb, NULL, NULL);
+    *menu = g_list_append(*menu, act);
+}
+
 /* Initialize the OTR UI subsystem */
 static void otrg_gtk_ui_init(void)
 {
@@ -1036,6 +1054,7 @@ static const OtrgUiUiOps gtk_ui_ui_ops = {
     otrg_gtk_ui_update_fingerprint,
     otrg_gtk_ui_update_keylist,
     otrg_gtk_ui_config_buddy,
+    otrg_gtk_ui_buddy_menu
 };
 
 /* Get the GTK UI ops */

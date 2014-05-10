@@ -34,6 +34,8 @@ typedef struct {
     void (*update_keylist)(void);
 
     void (*config_buddy)(PurpleBuddy *buddy);
+
+    void (*buddy_menu)(PurpleBuddy *buddy, GList **menu);
 } OtrgUiUiOps;
 
 /* Set the UI ops */
@@ -66,6 +68,9 @@ void otrg_ui_forget_fingerprint(Fingerprint *fingerprint);
 
 /* Configure OTR for a particular buddy */
 void otrg_ui_config_buddy(PurpleBuddy *buddy);
+
+/* Buddy actions menu was extended */
+void otrg_ui_buddy_menu(PurpleBuddy *buddy, GList **menu);
 
 #endif
 

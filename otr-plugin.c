@@ -1164,18 +1164,8 @@ static void process_connection_change(PurpleConnection *conn, void *data)
     otrg_dialog_resensitize_all();
 }
 
-static void otr_options_cb(PurpleBlistNode *node, gpointer user_data)
-{
-    /* We've already checked PURPLE_BLIST_NODE_IS_BUDDY(node) */
-    PurpleBuddy *buddy = (PurpleBuddy *)node;
-
-    /* Modify the settings for this buddy */
-    otrg_ui_config_buddy(buddy);
-}
-
 static void supply_extended_menu(PurpleBlistNode *node, GList **menu)
 {
-    PurpleMenuAction *act;
     PurpleBuddy *buddy;
     PurpleAccount *acct;
     const char *proto;
@@ -1189,9 +1179,7 @@ static void supply_extended_menu(PurpleBlistNode *node, GList **menu)
     proto = purple_account_get_protocol_id(acct);
     if (!otrg_plugin_proto_supports_otr(proto)) return;
 
-    act = purple_menu_action_new(_("OTR Settings"),
-	    (PurpleCallback)otr_options_cb, NULL, NULL);
-    *menu = g_list_append(*menu, act);
+    otrg_ui_buddy_menu(buddy, menu);
 }
 
 /* Disconnect all context instances, sending a notice to the other side, if

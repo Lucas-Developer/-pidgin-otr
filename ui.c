@@ -165,4 +165,11 @@ void otrg_ui_config_buddy(PurpleBuddy *buddy)
     }
 }
 
+void otrg_ui_buddy_menu(PurpleBuddy *buddy, GList **menu)
+{
+    if (ui_ops != NULL && ui_ops->buddy_menu != NULL) {
+	ui_ops->buddy_menu(buddy, menu);
+    }
+}
+
 /* vim: set tabstop=8 softtabstop=4 shiftwidth=4 noexpandtab: */
