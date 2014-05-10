@@ -22,12 +22,7 @@
 #ifndef __OTRG_UI_H__
 #define __OTRG_UI_H__
 
-/* Global and per-buddy preferences */
-typedef struct {
-    OtrlPolicy policy;
-    gboolean avoid_logging_otr;
-    gboolean show_otr_button;
-} OtrgUiPrefs;
+#include "common.h"
 
 typedef struct {
     void (*init)(void);

@@ -62,6 +62,7 @@
 #include <libotr/instag.h>
 
 /* purple-otr headers */
+#include "common.h"
 #include "otr-plugin.h"
 #include "dialogs.h"
 #include "gtk-dialog.h"

@@ -39,7 +39,8 @@ typedef struct _OtrgContextClone OtrgContextClone;
 typedef struct {
 	OtrlPolicy policy;
 	gboolean avoid_logging_otr;
-} OtrgUiPrefs;
+	gboolean show_otr_button; /* TODO: temporary */
+} OtrgUiPrefs; /* TODO: rename it to OtrgPrefs? */
 
 OtrgFingerprintClone *
 otrg_fingerprint_clone(Fingerprint *fprint);
