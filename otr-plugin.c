@@ -230,7 +230,7 @@ otrg_plugin_privkeygen_waitall(void)
 
     if (!otrg_plugin_privkeygen_threads && !otrg_plugin_privkeygen_zombies)
 	return;
-    purple_debug_warning("otr", "waiting for background threads...");
+    purple_debug_warning("otr", "waiting for background threads...\n");
 
     it = otrg_plugin_privkeygen_threads;
     otrg_plugin_privkeygen_threads = NULL;
@@ -255,7 +255,7 @@ otrg_plugin_privkeygen_waitall(void)
 	g_free(tdata);
     }
 
-    purple_debug_info("otr", "all background threads finished...");
+    purple_debug_info("otr", "all background threads finished...\n");
 }
 
 static void
@@ -270,7 +270,7 @@ otrg_plugin_privkeygen_finish(OtrgPluginPrivkeygenData *tdata)
 
     key_fname = g_build_filename(purple_user_dir(), PRIVKEYFNAME, NULL);
     if (!key_fname) {
-	purple_debug_fatal("otr", "out of memory building filenames!");
+	purple_debug_fatal("otr", "out of memory building filenames!\n");
 	return;
     }
 #if 0
@@ -287,7 +287,7 @@ otrg_plugin_privkeygen_finish(OtrgPluginPrivkeygenData *tdata)
     g_free(key_fname);
 
     if (!key_fh) {
-	purple_debug_fatal("otr", "could not write private key file");
+	purple_debug_fatal("otr", "could not write private key file\n");
 	return;
     }
 
@@ -297,7 +297,7 @@ otrg_plugin_privkeygen_finish(OtrgPluginPrivkeygenData *tdata)
 
     if (err) {
 	purple_debug_error("otr", "otrl_privkey_generate_finish_FILEp returned "
-	    "%d", err);
+	    "%d\n", err);
     }
 
     otrg_ui_update_fingerprint();
@@ -320,7 +320,7 @@ otrg_plugin_privkeygen_poll(gpointer _unused)
 	if (!tdata->finished)
 	    continue;
 
-	purple_debug_info("otr", "finished thread %p", tdata->thread);
+	purple_debug_misc("otr", "finished thread %p\n", tdata->thread);
 
 	otrg_plugin_privkeygen_threads = g_list_delete_link(
 	    otrg_plugin_privkeygen_threads, current);
@@ -338,7 +338,7 @@ otrg_plugin_privkeygen_poll(gpointer _unused)
 	if (!tdata->finished)
 	    continue;
 
-	purple_debug_info("otr", "finished zombie thread %p", tdata->thread);
+	purple_debug_misc("otr", "finished zombie thread %p\n", tdata->thread);
 
 	otrg_plugin_privkeygen_zombies = g_list_delete_link(
 	    otrg_plugin_privkeygen_zombies, current);
@@ -363,7 +363,7 @@ otrg_plugin_privkeygen_cancel(gpointer _tdata)
     OtrgPluginPrivkeygenData *tdata = _tdata;
 
     if (g_list_find(otrg_plugin_privkeygen_threads, tdata) == NULL) {
-	purple_debug_warning("otr", "Thread was already cancelled");
+	purple_debug_warning("otr", "Thread was already cancelled\n");
 	return;
     }
 
@@ -396,11 +396,11 @@ otrg_plugin_privkeygen_start(const char *accountname, const char *protocol)
     err = otrl_privkey_generate_start(otrg_plugin_userstate, accountname,
 	protocol, &tdata->new_key);
     if ((err & GPG_ERR_CODE_MASK) == GPG_ERR_EEXIST) {
-	purple_debug_warning("otr", "Key exists or is generating");
+	purple_debug_warning("otr", "Key exists or is generating\n");
 	return;
     }
     if (tdata->new_key == NULL) {
-	purple_debug_error("otr", "otrl_privkey_generate_start returned %#x",
+	purple_debug_error("otr", "otrl_privkey_generate_start returned %#x\n",
 	    err);
 	return;
     }
@@ -422,7 +422,7 @@ otrg_plugin_privkeygen_start(const char *accountname, const char *protocol)
 	tdata, TRUE, NULL);
 #endif
 
-    purple_debug_info("otr", "started thread %p", tdata->thread);
+    purple_debug_misc("otr", "started thread %p\n", tdata->thread);
 
     otrg_plugin_privkeygen_threads = g_list_prepend(
 	otrg_plugin_privkeygen_threads, tdata);
