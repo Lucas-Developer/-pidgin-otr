@@ -18,7 +18,36 @@ AM_PATH_LIBGCRYPT(1:1.2.0,,AC_MSG_ERROR(libgcrypt 1.2.0 or newer is required.))
 
 AM_PATH_LIBOTR(4.0.0,,AC_MSG_ERROR(libotr 4.x >= 4.0.0 is required.))
 
-PKG_CHECK_MODULES([EXTRA], [glib-2.0 >= 2.6 gtk+-2.0 >= 2.6 pidgin >= 2.0 purple >= 2.0])
+PKG_CHECK_MODULES([GLIB], [glib-2.0 >= 2.6])
+
+AC_ARG_WITH([purple],
+    AS_HELP_STRING([--with-purple=<version>],
+        [compile with libpurple 2 or 3 (default: auto)]),
+    with_purple=$withval, with_purple="auto")
+
+if test "x$with_purple" = "xauto"; then
+    PKG_CHECK_MODULES([PURPLE], [purple-3 >= 3.0], [with_purple=3], [
+        PKG_CHECK_MODULES([PURPLE], [pidgin >= 2.0 purple >= 2.0])
+        with_purple=2
+    ])
+elif test "x$with_purple" = "x2"; then
+    PKG_CHECK_MODULES([PURPLE], [pidgin >= 2.0 purple >= 2.0])
+elif test "x$with_purple" = "x3"; then
+    PKG_CHECK_MODULES([PURPLE], [purple-3 >= 3.0])
+else
+    AC_MSG_ERROR([--with-purple must specify one of 2, 3 or auto.])
+fi
+
+if test "x$with_purple" = "x3"; then
+    dnl TODO remove it when libpurple3 API becomes stable
+    AC_MSG_WARN([libpurple 3.0.0 support is experimental at the moment, please don't expect compatibility])
+fi
+if test "x$with_purple" = "x2"; then
+    PKG_CHECK_MODULES([GTK], [gtk+-2.0 >= 2.6])
+fi
+
+AM_CONDITIONAL(FOR_LIBPURPLE3, test "x$with_purple" = "x3")
+AM_CONDITIONAL(FOR_PIDGIN2, test "x$with_purple" = "x2")
 
 AC_PROG_INTLTOOL
 
