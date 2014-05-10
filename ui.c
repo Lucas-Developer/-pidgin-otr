@@ -129,7 +129,6 @@ void otrg_ui_disconnect_connection(ConnContext *context)
 	return;
 
     otrg_plugin_disconnect(context);
-    otrg_dialog_disconnected(context);
 }
 
 /* Forget a fingerprint */

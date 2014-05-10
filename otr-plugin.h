@@ -74,6 +74,8 @@ void otrg_plugin_send_default_query(ConnContext *context, void *account);
  * conversation. */
 void otrg_plugin_send_default_query_conv(PurpleConversation *conv);
 
+void otrg_plugin_disconnect_all_instances(ConnContext *context);
+
 /* Disconnect a context, sending a notice to the other side, if
  * appropriate. */
 void otrg_plugin_disconnect(ConnContext *context);

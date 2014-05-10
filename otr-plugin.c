@@ -1201,6 +1201,7 @@ void otrg_plugin_disconnect_all_instances(ConnContext *context)
     otrl_message_disconnect_all_instances(otrg_plugin_userstate, &ui_ops, NULL,
 	    context->accountname, context->protocol, context->username);
     conv_logging_revert(context);
+    otrg_dialog_disconnected(context);
 }
 
 /* Disconnect a context, sending a notice to the other side, if
@@ -1211,6 +1212,7 @@ void otrg_plugin_disconnect(ConnContext *context)
 	    context->accountname, context->protocol, context->username,
 	    context->their_instance);
     conv_logging_revert(context);
+    otrg_dialog_disconnected(context);
 }
 
 /* Write the fingerprints to disk. */
