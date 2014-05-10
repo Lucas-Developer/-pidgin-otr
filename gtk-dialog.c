@@ -2195,8 +2195,6 @@ static void select_meta_ctx(GtkWidget *widget, gpointer data)
     GtkWidget *select_recent = (GtkWidget *) purple_conversation_get_data(conv,
 	    "otr-select_recent");
     gboolean value = FALSE;
-    otrl_instag_t * selected_instance = (otrl_instag_t *)
-	    purple_conversation_get_data(conv, "otr-ui_selected_ctx");
     ConnContext * context = NULL;
     ConnContext * recent_context = NULL;
 
@@ -2206,9 +2204,7 @@ static void select_meta_ctx(GtkWidget *widget, gpointer data)
 	GTK_CHECK_MENU_ITEM(select_recent)->active = !value;
 
 	if (value) {
-	    if (selected_instance) {
-		*selected_instance = OTRL_INSTAG_BEST;
-	    }
+	    otrg_conversation_set_selected_instag(conv, OTRL_INSTAG_BEST);
 	    context = (ConnContext *) otrg_plugin_conv_to_selected_context(conv,
 		    1);
 
@@ -2232,8 +2228,9 @@ static void select_meta_ctx(GtkWidget *widget, gpointer data)
     } else if (widget == select_recent) {
 	GTK_CHECK_MENU_ITEM(select_best)->active = !value;
 
-	if (value && selected_instance) {
-	    *selected_instance = OTRL_INSTAG_RECENT_RECEIVED;
+	if (value) {
+	    otrg_conversation_set_selected_instag(conv,
+		OTRL_INSTAG_RECENT_RECEIVED);
 	}
     }
 
@@ -2250,15 +2247,11 @@ static void select_menu_ctx(GtkWidget *widget, gpointer data)
     PurpleConversation *conv = otrg_plugin_context_to_conv(context, 1);
     ConnContext *recent_context = (ConnContext *) otrg_plugin_conv_to_context(
 	    conv, (otrl_instag_t)OTRL_INSTAG_RECENT_RECEIVED, 0);
-    otrl_instag_t *selected_instance = (otrl_instag_t *)
-	    purple_conversation_get_data(conv, "otr-ui_selected_ctx");
     gboolean *is_multi_instance = purple_conversation_get_data(conv,
 		    "otr-conv_multi_instances");
 
     if (is_multi_instance && *is_multi_instance) {
-	if (selected_instance) {
-	    *selected_instance = context->their_instance;
-	}
+	otrg_conversation_set_selected_instag(conv, context->their_instance);
 	unselect_meta_ctx(conv);
     }
 
@@ -2285,13 +2278,13 @@ static void build_meta_instance_submenu( PurpleConversation *conv,
 	    _("Send to most secure"));
     GtkWidget *select_recent = gtk_check_menu_item_new_with_label(
 	    _("Send to most recent"));
-    otrl_instag_t * selected_instance = purple_conversation_get_data(conv,
-	    "otr-ui_selected_ctx");
+    otrl_instag_t selected_instance =
+	    otrg_conversation_get_selected_instag(conv);
 
-    if (!selected_instance || *selected_instance == OTRL_INSTAG_BEST) {
+    if (selected_instance == OTRL_INSTAG_BEST) {
 	GTK_CHECK_MENU_ITEM(select_recent)->active = 0;
 	GTK_CHECK_MENU_ITEM(select_best)->active = 1;
-    } else if (*selected_instance == OTRL_INSTAG_RECENT_RECEIVED) {
+    } else if (selected_instance == OTRL_INSTAG_RECENT_RECEIVED) {
 	GTK_CHECK_MENU_ITEM(select_recent)->active = 1;
 	GTK_CHECK_MENU_ITEM(select_best)->active = 0;
     } else {
@@ -2331,9 +2324,7 @@ static void otr_add_buddy_instances_top_menu(PidginConversation *gtkconv,
     GtkWidget *menu_image;
     GtkWidget * tooltip_menu;
     gchar *tooltip_text;
-    gpointer gp_instance;
-    otrl_instag_t * selected_instance = NULL;
-    gboolean selection_exists = 0;
+    otrl_instag_t selected_instance;
     ConnContext * context = instances->data;
     TrustLevel level = TRUST_NOT_PRIVATE;
     GHashTable * conv_or_ctx_map;
@@ -2342,20 +2333,12 @@ static void otr_add_buddy_instances_top_menu(PidginConversation *gtkconv,
     GList * menu_list;
 
     conv = otrg_plugin_context_to_conv(context, 0);
-    selection_exists = g_hash_table_lookup_extended(conv->data,
-	    "otr-ui_selected_ctx", NULL, &gp_instance);
+    selected_instance = otrg_conversation_get_selected_instag(conv);
 
     /* Find the selected or default instance */
-    if (selection_exists) {
-	selected_instance = gp_instance;
-	context = otrl_context_find(otrg_plugin_userstate,
-		context->username, context->accountname, context->protocol,
-		*selected_instance, 0, NULL, NULL, NULL);
-    } else {
-	context = otrl_context_find(otrg_plugin_userstate,
-		context->username, context->accountname, context->protocol,
-		OTRL_INSTAG_BEST, 0, NULL, NULL, NULL);
-    }
+    context = otrl_context_find(otrg_plugin_userstate,
+	context->username, context->accountname, context->protocol,
+	selected_instance, 0, NULL, NULL, NULL);
 
     menu = gtk_menu_new();
 
@@ -2405,8 +2388,7 @@ static void otr_add_buddy_instances_top_menu(PidginConversation *gtkconv,
 
 	g_free(text);
 
-	if (!selection_exists ||
-		*selected_instance != curr_context->their_instance) {
+	if (selected_instance != curr_context->their_instance) {
 	    GtkWidget *select_ctx = gtk_menu_item_new_with_label(_("Select"));
 	    GtkWidget *menusep = gtk_separator_menu_item_new();
 
@@ -2419,8 +2401,7 @@ static void otr_add_buddy_instances_top_menu(PidginConversation *gtkconv,
 	    gtk_menu_shell_prepend(GTK_MENU_SHELL(instance_submenu),
 		    select_ctx);
 	    gtk_widget_show(select_ctx);
-	} else if (selection_exists && 
-		*selected_instance == curr_context->their_instance) {
+	} else if (selected_instance == curr_context->their_instance) {
 	    GtkWidget *selected_ctx =
 		    gtk_menu_item_new_with_label(_("Selected"));
 	    GtkWidget *menusep = gtk_separator_menu_item_new();

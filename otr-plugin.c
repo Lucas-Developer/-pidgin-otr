@@ -1070,16 +1070,10 @@ ConnContext* otrg_plugin_conv_to_selected_context(PurpleConversation *conv,
 
 static void process_conv_create(PurpleConversation *conv)
 {
-    otrl_instag_t * selected_instance;
     OtrlMessageEvent * msg_event;
     if (!conv) return;
 
-    /* If this malloc fails (or the other below), trouble will be
-     * unavoidable. */
-    selected_instance = g_malloc(sizeof(otrl_instag_t));
-    *selected_instance = OTRL_INSTAG_BEST;
-    purple_conversation_set_data(conv, "otr-ui_selected_ctx",
-	    (gpointer)selected_instance);
+    otrg_conversation_set_selected_instag(conv, OTRL_INSTAG_BEST);
 
     msg_event = g_malloc(sizeof(OtrlMessageEvent));
     *msg_event = OTRL_MSGEVENT_NONE;
@@ -1117,20 +1111,13 @@ static void process_conv_updated(PurpleConversation *conv,
 
 static void process_conv_destroyed(PurpleConversation *conv)
 {
-    otrl_instag_t * selected_instance =
-	    purple_conversation_get_data(conv, "otr-ui_selected_ctx");
     OtrlMessageEvent * msg_event =
 	    purple_conversation_get_data(conv, "otr-last_msg_event");
-
-    if (selected_instance) {
-	g_free(selected_instance);
-    }
 
     if (msg_event) {
 	g_free(msg_event);
     }
 
-    g_hash_table_remove(conv->data, "otr-ui_selected_ctx");
     g_hash_table_remove(conv->data, "otr-last_msg_event");
 }
 
