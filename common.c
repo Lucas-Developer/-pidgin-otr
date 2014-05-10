@@ -297,14 +297,14 @@ otrg_conversation_is_multi_instance(PurpleConversation *conv)
 
 void
 otrg_conversation_set_warned_instances(PurpleConversation *conv,
-	gboolean is_warned)
+	gboolean have_warned)
 {
 	otrg_conversation_set_common(conv, "otr-warned_instances",
-		is_warned);
+		have_warned);
 }
 
 gboolean
-otrg_conversation_is_warned_instances(PurpleConversation *conv)
+otrg_conversation_have_warned_instances(PurpleConversation *conv)
 {
 	return otrg_conversation_get_common(conv, "otr-warned_instances");
 }
