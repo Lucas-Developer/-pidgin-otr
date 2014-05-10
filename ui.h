@@ -34,9 +34,6 @@ typedef struct {
     void (*update_keylist)(void);
 
     void (*config_buddy)(PurpleBuddy *buddy);
-
-    void (*get_prefs)(OtrgUiPrefs *prefsp, PurpleAccount *account,
-	    const char *name);
 } OtrgUiUiOps;
 
 /* Set the UI ops */
@@ -69,10 +66,6 @@ void otrg_ui_forget_fingerprint(Fingerprint *fingerprint);
 
 /* Configure OTR for a particular buddy */
 void otrg_ui_config_buddy(PurpleBuddy *buddy);
-
-/* Load the preferences for a particular account / username */
-void otrg_ui_get_prefs(OtrgUiPrefs *prefsp, PurpleAccount *account,
-	const char *name);
 
 #endif
 

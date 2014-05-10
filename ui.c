@@ -166,27 +166,4 @@ void otrg_ui_config_buddy(PurpleBuddy *buddy)
     }
 }
 
-/* Load the preferences for a particular account / username */
-void otrg_ui_get_prefs(OtrgUiPrefs *prefsp, PurpleAccount *account,
-	const char *name)
-{
-    /* Check to see if the protocol for this account supports OTR at all. */
-    const char *proto = purple_account_get_protocol_id(account);
-    if (!otrg_plugin_proto_supports_otr(proto)) {
-	prefsp->policy = OTRL_POLICY_NEVER;
-	prefsp->avoid_logging_otr = TRUE;
-	prefsp->show_otr_button = FALSE;
-	return;
-    }
-
-    if (ui_ops != NULL) {
-	ui_ops->get_prefs(prefsp, account, name);
-	return;
-    }
-    /* If we've got no other way to get the prefs, use sensible defaults */
-    prefsp->policy = OTRL_POLICY_DEFAULT;
-    prefsp->avoid_logging_otr = TRUE;
-    prefsp->show_otr_button = FALSE;
-}
-
 /* vim: set tabstop=8 softtabstop=4 shiftwidth=4 noexpandtab: */

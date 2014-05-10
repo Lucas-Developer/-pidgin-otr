@@ -194,7 +194,7 @@ static OtrlPolicy policy_cb(void *opdata, ConnContext *context)
     account = purple_accounts_find(context->accountname, context->protocol);
     if (!account) return policy;
 
-    otrg_ui_get_prefs(&prefs, account, context->username);
+    otrg_buddy_get_prefs(&prefs, account, context->username);
     return prefs.policy;
 }
 
@@ -984,7 +984,7 @@ void otrg_plugin_send_default_query(ConnContext *context, void *vaccount)
     char *msg;
     OtrgUiPrefs prefs;
 
-    otrg_ui_get_prefs(&prefs, account, context->username);
+    otrg_buddy_get_prefs(&prefs, account, context->username);
     msg = otrl_proto_default_query_msg(context->accountname,
 	    prefs.policy);
     otrg_plugin_inject_message(account, context->username,
@@ -1005,7 +1005,7 @@ void otrg_plugin_send_default_query_conv(PurpleConversation *conv)
     accountname = purple_account_get_username(account);
     username = purple_conversation_get_name(conv);
 
-    otrg_ui_get_prefs(&prefs, account, username);
+    otrg_buddy_get_prefs(&prefs, account, username);
     msg = otrl_proto_default_query_msg(accountname, prefs.policy);
     otrg_plugin_inject_message(account, username, msg ? msg : "?OTRv23?");
     free(msg);
@@ -1123,7 +1123,7 @@ static void process_conv_updated(PurpleConversation *conv,
 	ConnContext *context;
 	OtrgUiPrefs prefs;
 	PurpleAccount *account = purple_conversation_get_account(conv);
-	otrg_ui_get_prefs(&prefs, account, purple_conversation_get_name(conv));
+	otrg_buddy_get_prefs(&prefs, account, purple_conversation_get_name(conv));
 
 	context = otrg_plugin_conv_to_selected_context(conv, 0);
 	if (context && prefs.avoid_logging_otr &&

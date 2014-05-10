@@ -1437,17 +1437,10 @@ static void otrg_gtk_dialog_connected(ConnContext *context)
     char *buf;
     char *format_buf;
     TrustLevel level;
-    OtrgUiPrefs prefs;
     gboolean * is_multi_inst;
 
     conv = otrg_plugin_context_to_conv(context, TRUE);
     level = otrg_plugin_context_to_trust(context);
-
-    otrg_ui_get_prefs(&prefs, purple_conversation_get_account(conv),
-	    context->username);
-    if (prefs.avoid_logging_otr) {
-	purple_conversation_set_logging(conv, FALSE);
-    }
 
     switch(level) {
        case TRUST_PRIVATE:
@@ -1509,7 +1502,6 @@ static void otrg_gtk_dialog_disconnected(ConnContext *context)
 {
     PurpleConversation *conv;
     char *buf;
-    OtrgUiPrefs prefs;
 
     conv = otrg_plugin_context_to_conv(context, 1);
 
@@ -1520,14 +1512,6 @@ static void otrg_gtk_dialog_disconnected(ConnContext *context)
 	    time(NULL));
 
     g_free(buf);
-
-    otrg_ui_get_prefs(&prefs, purple_conversation_get_account(conv),
-	    context->username);
-    if (prefs.avoid_logging_otr) {
-	if (purple_prefs_get_bool("/purple/logging/log_ims")) {
-	    purple_conversation_set_logging(conv, TRUE);
-	}
-    }
 
     dialog_update_label(context);
     close_smp_window(conv);
@@ -2792,7 +2776,7 @@ static void otrg_gtk_dialog_new_purple_conv(PurpleConversation *conv)
     /* Get the prefs */
     account = purple_conversation_get_account(conv);
     name = purple_conversation_get_name(conv);
-    otrg_ui_get_prefs(&prefs, account, name);
+    otrg_buddy_get_prefs(&prefs, account, name);
 
     /* OTR is disabled for this buddy */
     if (prefs.policy == OTRL_POLICY_NEVER) {
@@ -2934,7 +2918,7 @@ static void dialog_resensitize(PurpleConversation *conv)
 
     account = purple_conversation_get_account(conv);
     name = purple_conversation_get_name(conv);
-    otrg_ui_get_prefs(&prefs, account, name);
+    otrg_buddy_get_prefs(&prefs, account, name);
 
     if (prefs.policy == OTRL_POLICY_NEVER) {
 	otrg_gtk_dialog_remove_conv(conv);

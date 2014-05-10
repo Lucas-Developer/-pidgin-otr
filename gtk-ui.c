@@ -543,72 +543,6 @@ static void create_otroptions_buttons(struct otroptionsdata *oo,
 	    G_CALLBACK(otroptions_clicked_cb), oo);
 }
 
-/* Load the global OTR prefs */
-static void otrg_gtk_ui_global_prefs_load(gboolean *enabledp,
-	gboolean *automaticp, gboolean *onlyprivatep,
-	gboolean *avoidloggingotrp)
-{
-    if (purple_prefs_exists("/OTR/enabled")) {
-	*enabledp = purple_prefs_get_bool("/OTR/enabled");
-	*automaticp = purple_prefs_get_bool("/OTR/automatic");
-	*onlyprivatep = purple_prefs_get_bool("/OTR/onlyprivate");
-	*avoidloggingotrp = purple_prefs_get_bool("/OTR/avoidloggingotr");
-    } else {
-	*enabledp = TRUE;
-	*automaticp = TRUE;
-	*onlyprivatep = FALSE;
-	*avoidloggingotrp = TRUE;
-  }
-}
-
-/* Save the global OTR prefs */
-static void otrg_gtk_ui_global_prefs_save(gboolean enabled,
-	gboolean automatic, gboolean onlyprivate, gboolean avoidloggingotr)
-{
-    if (! purple_prefs_exists("/OTR")) {
-	purple_prefs_add_none("/OTR");
-    }
-    purple_prefs_set_bool("/OTR/enabled", enabled);
-    purple_prefs_set_bool("/OTR/automatic", automatic);
-    purple_prefs_set_bool("/OTR/onlyprivate", onlyprivate);
-    purple_prefs_set_bool("/OTR/avoidloggingotr", avoidloggingotr);
-}
-
-/* Load the OTR prefs for a particular buddy */
-static void otrg_gtk_ui_buddy_prefs_load(PurpleBuddy *buddy,
-	gboolean *usedefaultp, gboolean *enabledp, gboolean *automaticp,
-	gboolean *onlyprivatep, gboolean *avoidloggingotrp)
-{
-    PurpleBlistNode *node = &(buddy->node);
-
-    *usedefaultp = ! purple_blist_node_get_bool(node, "OTR/overridedefault");
-
-    if (*usedefaultp) {
-	otrg_gtk_ui_global_prefs_load(enabledp, automaticp, onlyprivatep,
-		avoidloggingotrp);
-    } else {
-	*enabledp = purple_blist_node_get_bool(node, "OTR/enabled");
-	*automaticp = purple_blist_node_get_bool(node, "OTR/automatic");
-	*onlyprivatep = purple_blist_node_get_bool(node, "OTR/onlyprivate");
-	*avoidloggingotrp =
-		purple_blist_node_get_bool(node, "OTR/avoidloggingotr");
-    }
-}
-
-/* Save the OTR prefs for a particular buddy */
-static void otrg_gtk_ui_buddy_prefs_save(PurpleBuddy *buddy,
-	gboolean usedefault, gboolean enabled, gboolean automatic,
-	gboolean onlyprivate, gboolean avoidloggingotr)
-{
-    PurpleBlistNode *node = &(buddy->node);
-
-    purple_blist_node_set_bool(node, "OTR/overridedefault", !usedefault);
-    purple_blist_node_set_bool(node, "OTR/enabled", enabled);
-    purple_blist_node_set_bool(node, "OTR/automatic", automatic);
-    purple_blist_node_set_bool(node, "OTR/onlyprivate", onlyprivate);
-    purple_blist_node_set_bool(node, "OTR/avoidloggingotr", avoidloggingotr);
-}
-
 static void load_otrsettings(struct otrsettingsdata *os)
 {
     gboolean otrenabled;
@@ -616,7 +550,7 @@ static void load_otrsettings(struct otrsettingsdata *os)
     gboolean otronlyprivate;
     gboolean otravoidloggingotr;
 
-    otrg_gtk_ui_global_prefs_load(&otrenabled, &otrautomatic, &otronlyprivate,
+    otrg_prefs_global_load(&otrenabled, &otrautomatic, &otronlyprivate,
 	    &otravoidloggingotr);
 
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(os->enablebox),
@@ -720,7 +654,7 @@ static void make_privkeys_ui(GtkWidget *vbox)
 /* Save the global OTR settings whenever they're clicked */
 static void otrsettings_save_cb(GtkButton *button, struct otrsettingsdata *os)
 {
-    otrg_gtk_ui_global_prefs_save(
+    otrg_prefs_global_save(
 	    gtk_toggle_button_get_active(
 		GTK_TOGGLE_BUTTON(os->enablebox)),
 	    gtk_toggle_button_get_active(
@@ -948,7 +882,7 @@ static void load_buddyprefs(struct cbdata *data)
 {
     gboolean usedefault, enabled, automatic, onlyprivate, avoidloggingotr;
 
-    otrg_gtk_ui_buddy_prefs_load(data->buddy, &usedefault, &enabled,
+    otrg_prefs_buddy_load(data->buddy, &usedefault, &enabled,
 	    &automatic, &onlyprivate, &avoidloggingotr);
 
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(data->defaultbox),
@@ -984,7 +918,7 @@ static void config_buddy_clicked_cb(GtkButton *button, struct cbdata *data)
 	    GTK_TOGGLE_BUTTON(data->os.enablebox));
 
     /* Apply the changes */
-    otrg_gtk_ui_buddy_prefs_save(data->buddy,
+    otrg_prefs_buddy_save(data->buddy,
 	    gtk_toggle_button_get_active(
 	    GTK_TOGGLE_BUTTON(data->defaultbox)),
 		enabled,
@@ -1084,64 +1018,6 @@ static void otrg_gtk_ui_config_buddy(PurpleBuddy *buddy)
     gtk_widget_show_all(dialog);
 }
 
-/* Load the preferences for a particular account / username */
-static void otrg_gtk_ui_get_prefs(OtrgUiPrefs *prefsp, PurpleAccount *account,
-	const char *name)
-{
-    PurpleBuddy *buddy;
-    gboolean otrenabled, otrautomatic, otronlyprivate, otravoidloggingotr;
-    gboolean buddyusedefault, buddyenabled, buddyautomatic, buddyonlyprivate,
-	    buddyavoidloggingotr;
-
-    prefsp->policy = OTRL_POLICY_DEFAULT;
-    prefsp->avoid_logging_otr = FALSE;
-    prefsp->show_otr_button = FALSE;
-
-    /* Get the default policy */
-    otrg_gtk_ui_global_prefs_load(&otrenabled, &otrautomatic, &otronlyprivate,
-	    &otravoidloggingotr);
-    otrg_gtk_ui_global_options_load(&(prefsp->show_otr_button));
-
-    if (otrenabled) {
-	if (otrautomatic) {
-	    if (otronlyprivate) {
-		prefsp->policy = OTRL_POLICY_ALWAYS;
-	    } else {
-		prefsp->policy = OTRL_POLICY_OPPORTUNISTIC;
-	    }
-	} else {
-	    prefsp->policy = OTRL_POLICY_MANUAL;
-	}
-	prefsp->avoid_logging_otr = otravoidloggingotr;
-    } else {
-	prefsp->policy = OTRL_POLICY_NEVER;
-    }
-
-    buddy = purple_find_buddy(account, name);
-    if (!buddy) return;
-
-    /* Get the buddy-specific policy, if present */
-    otrg_gtk_ui_buddy_prefs_load(buddy, &buddyusedefault, &buddyenabled,
-	    &buddyautomatic, &buddyonlyprivate, &buddyavoidloggingotr);
-
-    if (buddyusedefault) return;
-
-    if (buddyenabled) {
-	if (buddyautomatic) {
-	    if (buddyonlyprivate) {
-		prefsp->policy = OTRL_POLICY_ALWAYS;
-	    } else {
-		prefsp->policy = OTRL_POLICY_OPPORTUNISTIC;
-	    }
-	} else {
-	    prefsp->policy = OTRL_POLICY_MANUAL;
-	}
-	prefsp->avoid_logging_otr = buddyavoidloggingotr;
-    } else {
-	prefsp->policy = OTRL_POLICY_NEVER;
-    }
-}
-
 /* Initialize the OTR UI subsystem */
 static void otrg_gtk_ui_init(void)
 {
@@ -1160,7 +1036,6 @@ static const OtrgUiUiOps gtk_ui_ui_ops = {
     otrg_gtk_ui_update_fingerprint,
     otrg_gtk_ui_update_keylist,
     otrg_gtk_ui_config_buddy,
-    otrg_gtk_ui_get_prefs
 };
 
 /* Get the GTK UI ops */
