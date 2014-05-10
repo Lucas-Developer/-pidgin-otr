@@ -12,6 +12,7 @@ plugindir=		${libdir}/pidgin
 plugin_LTLIBRARIES=	pidgin-otr.la
 
 pidgin_otr_la_SOURCES = \
+	common.c \
 	dialogs.c \
 	gtk-dialog.c \
 	gtk-ui.c \
@@ -26,6 +27,7 @@ EXTRA_DIST = \
 	INSTALL.mingw \
 	Makefile.mingw \
 	Makefile.static \
+	common.h \
 	dialogs.h \
 	gtk-dialog.h \
 	otr-icons.h \

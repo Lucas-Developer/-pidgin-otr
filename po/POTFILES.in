@@ -1,5 +1,7 @@
 # List of files that (could) contain strings for translation
 
+common.c
+common.h
 dialogs.c
 dialogs.h
 gtk-dialog.c
