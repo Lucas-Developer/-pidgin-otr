@@ -206,68 +206,26 @@ otrg_conversation_get_contexts(PurpleConversation *conv)
 	return contexts;
 }
 
-static void
-otrg_conversation_set_common(PurpleConversation *conv, const gchar *key,
-	gboolean value)
-{
-	gboolean *var;
-
-	g_return_if_fail(conv != NULL);
-
-	var = otrg_conv_get_data(conv, key);
-	if (var == NULL) {
-		purple_debug_error("otr", "otrg_conversation_set_common: key %s"
-			" doesn't exists", key);
-		return;
-	}
-
-	*var = value;
-}
-
-static gboolean
-otrg_conversation_get_common(PurpleConversation *conv, const gchar *key)
-{
-	gboolean *var;
-
-	g_return_val_if_fail(conv != NULL, FALSE);
-
-	var = otrg_conv_get_data(conv, key);
-	if (var == NULL) {
-		purple_debug_error("otr", "otrg_conversation_get_common: key %s"
-			" doesn't exists", key);
-		return FALSE;
-	}
-
-	return *var;
-}
-
 void
 otrg_conversation_init_vars(PurpleConversation *conv)
 {
-	otrg_conv_set_data(conv, "otr-conv_multi_instances",
-		g_new0(gboolean, 1));
-	otrg_conv_set_data(conv, "otr-warned_instances", g_new0(gboolean, 1));
-	otrg_conv_set_data(conv, "otr-max_idx", g_new0(gint, 1));
+	otrg_conversation_set_multi_instance(conv, FALSE);
+	otrg_conversation_set_warned_instances(conv, FALSE);
+	otrg_conv_set_data(conv, "otr-max_idx", GINT_TO_POINTER(0));
 	otrg_conv_set_data(conv, "otr-conv_to_idx", g_hash_table_new_full(
 		g_direct_hash, g_direct_equal, NULL, g_free));
-	otrg_conv_set_data(conv, "otr-last_received_ctx",
-		g_new0(otrl_instag_t, 1));
 	otrg_conversation_set_last_received_instance(conv, OTRL_INSTAG_BEST);
 }
 
 void
 otrg_conversation_cleanup_vars(PurpleConversation *conv)
 {
-	g_free(otrg_conv_get_data(conv, "otr-conv_multi_instances"));
-	otrg_conv_set_data(conv, "otr-conv_multi_instances", NULL);
-	g_free(otrg_conv_get_data(conv, "otr-warned_instances"));
-	otrg_conv_set_data(conv, "otr-warned_instances", NULL);
-	g_free(otrg_conv_get_data(conv, "otr-max_idx"));
-	otrg_conv_set_data(conv, "otr-max_idx", NULL);
+	otrg_conversation_set_multi_instance(conv, FALSE);
+	otrg_conversation_set_warned_instances(conv, FALSE);
+	otrg_conv_set_data(conv, "otr-max_idx", GINT_TO_POINTER(0));
 	g_hash_table_destroy(otrg_conv_get_data(conv, "otr-conv_to_idx"));
 	otrg_conv_set_data(conv, "otr-conv_to_idx", NULL);
-	g_free(otrg_conv_get_data(conv, "otr-last_received_ctx"));
-	otrg_conv_set_data(conv, "otr-last_received_ctx", NULL);
+	otrg_conversation_set_last_received_instance(conv, OTRL_INSTAG_BEST);
 }
 
 gboolean
@@ -285,28 +243,30 @@ void
 otrg_conversation_set_multi_instance(PurpleConversation *conv,
 	gboolean is_multi_instance)
 {
-	otrg_conversation_set_common(conv, "otr-conv_multi_instances",
-		is_multi_instance);
+	otrg_conv_set_data(conv, "otr-conv_multi_instances",
+		GINT_TO_POINTER(is_multi_instance));
 }
 
 gboolean
 otrg_conversation_is_multi_instance(PurpleConversation *conv)
 {
-	return otrg_conversation_get_common(conv, "otr-conv_multi_instances");
+	return GPOINTER_TO_INT(otrg_conv_get_data(conv,
+		"otr-conv_multi_instances"));
 }
 
 void
 otrg_conversation_set_warned_instances(PurpleConversation *conv,
 	gboolean have_warned)
 {
-	otrg_conversation_set_common(conv, "otr-warned_instances",
-		have_warned);
+	otrg_conv_set_data(conv, "otr-warned_instances",
+		GINT_TO_POINTER(have_warned));
 }
 
 gboolean
 otrg_conversation_have_warned_instances(PurpleConversation *conv)
 {
-	return otrg_conversation_get_common(conv, "otr-warned_instances");
+	return GPOINTER_TO_INT(otrg_conv_get_data(conv,
+		"otr-warned_instances"));
 }
 
 guint
@@ -323,13 +283,15 @@ otrg_context_instance_to_index(PurpleConversation *conv, ConnContext *context)
 
 	idx = g_hash_table_lookup(conv_to_idx, context);
 	if (!idx) {
-		gint *max_index = otrg_conv_get_data(conv, "otr-max_idx");
-		g_return_val_if_fail(max_index != NULL, 0);
+		gint max_index = GPOINTER_TO_INT(otrg_conv_get_data(conv,
+			"otr-max_idx"));
 
 		idx = g_new0(gint, 1);
 		g_hash_table_replace(conv_to_idx, context, idx);
 
-		*idx = ++(*max_index);
+		*idx = ++max_index;
+		otrg_conv_set_data(conv, "otr-max_idx",
+			GINT_TO_POINTER(max_index));
 	}
 
 	return *idx;
@@ -339,27 +301,15 @@ void
 otrg_conversation_set_last_received_instance(PurpleConversation *conv,
 	otrl_instag_t instance)
 {
-	gboolean *var;
-
-	g_return_if_fail(conv != NULL);
-
-	var = otrg_conv_get_data(conv, "otr-last_received_ctx");
-	g_return_if_fail(var != NULL);
-
-	*var = instance;
+	otrg_conv_set_data(conv, "otr-last_received_ctx",
+		GINT_TO_POINTER(instance));
 }
 
 otrl_instag_t
 otrg_conversation_get_last_received_instance(PurpleConversation *conv)
 {
-	gboolean *var;
-
-	g_return_val_if_fail(conv != NULL, OTRL_INSTAG_BEST);
-
-	var = otrg_conv_get_data(conv, "otr-last_received_ctx");
-	g_return_val_if_fail(var != NULL, OTRL_INSTAG_BEST);
-
-	return *var;
+	return GPOINTER_TO_INT(otrg_conv_get_data(conv,
+		"otr-last_received_ctx"));
 }
 
 void
