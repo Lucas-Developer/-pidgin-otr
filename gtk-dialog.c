@@ -2454,11 +2454,6 @@ static void otr_add_buddy_top_menus(PurpleConversation *conv)
     /* First determine how many contexts are associated with each conv */
     for (list_iter = g_list_last ( full_buddy_list ); list_iter != NULL;
 	    list_iter = list_iter->prev) {
-	PurpleAccount *account;
-	char *username;
-	const char *accountname, *proto;
-	GList * contexts = NULL;
-
 	currentConv = list_iter->data;
 
 	if (currentConv == NULL) {
@@ -2469,28 +2464,8 @@ static void otr_add_buddy_top_menus(PurpleConversation *conv)
 	    continue;
 	}
 
-	account = purple_conversation_get_account(currentConv);
-	accountname = purple_account_get_username(account);
-	proto = purple_account_get_protocol_id(account);
-	username = g_strdup(purple_normalize(account,
-		purple_conversation_get_name(currentConv)));
-
-	for (currentContext = otrg_plugin_userstate->context_root;
-		currentContext != NULL;
-		currentContext = currentContext->next) {
-
-	    if (!strcmp(currentContext->accountname, accountname) &&
-		    !strcmp(currentContext->protocol, proto) &&
-		    !strcmp(currentContext->username, username)) {
-		contexts = g_list_append(contexts, currentContext);
-	    }
-	}
-
-	g_free(username);
-
-	g_hash_table_insert(conv_to_context_map,
-		currentConv, (gpointer) contexts);
-
+	g_hash_table_insert(conv_to_context_map, currentConv,
+		(gpointer)otrg_conversation_get_contexts(currentConv));
     }
 
     list_iter = full_buddy_list;
