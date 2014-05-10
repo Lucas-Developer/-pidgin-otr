@@ -5,8 +5,10 @@ AC_INIT(pidgin-otr, 4.0.0)
 AM_CONFIG_HEADER(config.h)
 
 AM_INIT_AUTOMAKE([-Wall -Werror])
+AM_SILENT_RULES([yes])
 
 AC_PROG_CC
+m4_ifdef([AM_PROG_AR], [AM_PROG_AR])
 
 dnl We do not want to create a .a for the plugin, so disable by default.
 AM_DISABLE_STATIC
