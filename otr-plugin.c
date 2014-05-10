@@ -1158,7 +1158,7 @@ static void otrg_init_mms_table()
 	char *protid;
 	int maxmsgsize;
     } mmsPairs[] = {{"prpl-msn", 1409}, {"prpl-icq", 2346},
-	{"prpl-aim", 2343}, {"prpl-yahoo", 799}, {"prpl-gg", 1999},
+	{"prpl-aim", 2343}, {"prpl-yahoo", 799}, {"prpl-gg", 1232},
 	{"prpl-irc", 417}, {"prpl-oscar", 2343},
 	{"prpl-novell", 1792}, {NULL, 0}};
     int i = 0;
