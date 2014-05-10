@@ -1266,8 +1266,7 @@ TrustLevel otrg_plugin_context_to_trust(ConnContext *context)
 
     if (context && context->msgstate == OTRL_MSGSTATE_ENCRYPTED) {
 	if (context->active_fingerprint &&
-		context->active_fingerprint->trust &&
-		context->active_fingerprint->trust[0] != '\0') {
+		otrg_fingerprint_is_trusted(context->active_fingerprint)) {
 	    level = TRUST_PRIVATE;
 	} else {
 	    level = TRUST_UNVERIFIED;

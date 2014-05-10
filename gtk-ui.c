@@ -218,7 +218,7 @@ static void otrg_gtk_ui_update_keylist(void)
 		titles[1] = (gchar *)
 		    _(trust_states[best_level]);
 	    }
-	    titles[2] = (fingerprint->trust && fingerprint->trust[0]) ?
+	    titles[2] = otrg_fingerprint_is_trusted(fingerprint) ?
 		    _("Yes") : _("No");
 	    otrl_privkey_hash_to_human(hash, fingerprint->fingerprint);
 	    titles[3] = hash;
