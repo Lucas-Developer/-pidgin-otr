@@ -637,12 +637,10 @@ static void handle_msg_event_cb(void *opdata, OtrlMessageEvent msg_event,
 {
     PurpleConversation *conv = NULL;
     gchar *buf;
-    OtrlMessageEvent * last_msg_event;
 
     if (!context) return;
 
     conv = otrg_plugin_context_to_conv(context, 1);
-    last_msg_event = g_hash_table_lookup(conv->data, "otr-last_msg_event");
 
     switch (msg_event)
     {
@@ -783,7 +781,7 @@ static void handle_msg_event_cb(void *opdata, OtrlMessageEvent msg_event,
 	    g_free(buf);
 	    break;
 	case OTRL_MSGEVENT_RCVDMSG_FOR_OTHER_INSTANCE:
-	    if (*last_msg_event == msg_event) {
+	    if (otrg_conversation_get_last_msg_event(conv) == msg_event) {
 		break;
 	    }
 	    buf = g_strdup_printf(_("%s has sent a message intended for a "
@@ -798,7 +796,7 @@ static void handle_msg_event_cb(void *opdata, OtrlMessageEvent msg_event,
 	    break;
     }
 
-    *last_msg_event = msg_event;
+    otrg_conversation_set_last_msg_event(conv, msg_event);
 }
 
 #ifdef DUMP_RECEIVED_SYMKEY
@@ -1070,15 +1068,10 @@ ConnContext* otrg_plugin_conv_to_selected_context(PurpleConversation *conv,
 
 static void process_conv_create(PurpleConversation *conv)
 {
-    OtrlMessageEvent * msg_event;
     if (!conv) return;
 
     otrg_conversation_set_selected_instag(conv, OTRL_INSTAG_BEST);
-
-    msg_event = g_malloc(sizeof(OtrlMessageEvent));
-    *msg_event = OTRL_MSGEVENT_NONE;
-    purple_conversation_set_data(conv, "otr-last_msg_event",
-	    (gpointer)msg_event);
+    otrg_conversation_set_last_msg_event(conv, OTRL_MSGEVENT_NONE);
 
     otrg_dialog_new_conv(conv);
 }
@@ -1107,18 +1100,6 @@ static void process_conv_updated(PurpleConversation *conv,
 	    purple_conversation_set_logging(conv, FALSE);
 	}
     }
-}
-
-static void process_conv_destroyed(PurpleConversation *conv)
-{
-    OtrlMessageEvent * msg_event =
-	    purple_conversation_get_data(conv, "otr-last_msg_event");
-
-    if (msg_event) {
-	g_free(msg_event);
-    }
-
-    g_hash_table_remove(conv->data, "otr-last_msg_event");
 }
 
 static void process_connection_change(PurpleConnection *conn, void *data)
@@ -1468,8 +1449,6 @@ static gboolean otr_plugin_load(PurplePlugin *handle)
 	    otrg_plugin_handle, PURPLE_CALLBACK(process_conv_updated), NULL);
     purple_signal_connect(conv_handle, "conversation-created",
 	    otrg_plugin_handle, PURPLE_CALLBACK(process_conv_create_cb), NULL);
-    purple_signal_connect(conv_handle, "deleting-conversation",
-	    otrg_plugin_handle, PURPLE_CALLBACK(process_conv_destroyed), NULL);
     purple_signal_connect(conn_handle, "signed-on", otrg_plugin_handle,
 	    PURPLE_CALLBACK(process_connection_change), NULL);
     purple_signal_connect(conn_handle, "signed-off", otrg_plugin_handle,
@@ -1511,8 +1490,6 @@ static gboolean otr_plugin_unload(PurplePlugin *handle)
 	    otrg_plugin_handle, PURPLE_CALLBACK(process_conv_updated));
     purple_signal_disconnect(conv_handle, "conversation-created",
 	    otrg_plugin_handle, PURPLE_CALLBACK(process_conv_create_cb));
-    purple_signal_disconnect(conv_handle, "deleting-conversation",
-	    otrg_plugin_handle, PURPLE_CALLBACK(process_conv_destroyed));
     purple_signal_disconnect(conn_handle, "signed-on", otrg_plugin_handle,
 	    PURPLE_CALLBACK(process_connection_change));
     purple_signal_disconnect(conn_handle, "signed-off", otrg_plugin_handle,
