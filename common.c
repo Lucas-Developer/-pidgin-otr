@@ -211,10 +211,11 @@ otrg_conversation_init_vars(PurpleConversation *conv)
 {
 	otrg_conversation_set_multi_instance(conv, FALSE);
 	otrg_conversation_set_warned_instances(conv, FALSE);
-	otrg_conv_set_data(conv, "otr-max_idx", GINT_TO_POINTER(0));
-	otrg_conv_set_data(conv, "otr-conv_to_idx", g_hash_table_new_full(
-		g_direct_hash, g_direct_equal, NULL, g_free));
 	otrg_conversation_set_last_received_instance(conv, OTRL_INSTAG_BEST);
+	otrg_conv_set_data(conv, "otr-max_idx", GINT_TO_POINTER(0));
+
+	otrg_conv_set_data(conv, "otr-conv_to_idx", g_hash_table_new_full(
+		g_direct_hash, g_direct_equal, NULL, NULL));
 }
 
 void
@@ -222,10 +223,11 @@ otrg_conversation_cleanup_vars(PurpleConversation *conv)
 {
 	otrg_conversation_set_multi_instance(conv, FALSE);
 	otrg_conversation_set_warned_instances(conv, FALSE);
+	otrg_conversation_set_last_received_instance(conv, 0);
 	otrg_conv_set_data(conv, "otr-max_idx", GINT_TO_POINTER(0));
+
 	g_hash_table_destroy(otrg_conv_get_data(conv, "otr-conv_to_idx"));
 	otrg_conv_set_data(conv, "otr-conv_to_idx", NULL);
-	otrg_conversation_set_last_received_instance(conv, OTRL_INSTAG_BEST);
 }
 
 gboolean
@@ -273,7 +275,7 @@ guint
 otrg_context_instance_to_index(PurpleConversation *conv, ConnContext *context)
 {
 	GHashTable *conv_to_idx;
-	gint *idx;
+	gint idx;
 
 	g_return_val_if_fail(conv != NULL, 0);
 	g_return_val_if_fail(context != NULL, 0);
@@ -281,20 +283,20 @@ otrg_context_instance_to_index(PurpleConversation *conv, ConnContext *context)
 	conv_to_idx = otrg_conv_get_data(conv, "otr-conv_to_idx");
 	g_return_val_if_fail(conv_to_idx != NULL, 0);
 
-	idx = g_hash_table_lookup(conv_to_idx, context);
-	if (!idx) {
+	idx = GPOINTER_TO_INT(g_hash_table_lookup(conv_to_idx, context));
+	if (idx == 0) {
 		gint max_index = GPOINTER_TO_INT(otrg_conv_get_data(conv,
 			"otr-max_idx"));
 
-		idx = g_new0(gint, 1);
-		g_hash_table_replace(conv_to_idx, context, idx);
+		idx = ++max_index;
 
-		*idx = ++max_index;
 		otrg_conv_set_data(conv, "otr-max_idx",
 			GINT_TO_POINTER(max_index));
+		g_hash_table_replace(conv_to_idx, context,
+			GINT_TO_POINTER(idx));
 	}
 
-	return *idx;
+	return idx;
 }
 
 void
