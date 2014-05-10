@@ -899,7 +899,7 @@ static void process_sending_im(PurpleAccount *account, char *who,
 
     conv = otrg_plugin_userinfo_to_conv(accountname, protocol, username, 1);
 
-    instance = otrg_plugin_conv_to_selected_instag(conv, OTRL_INSTAG_BEST);
+    instance = otrg_conversation_get_selected_instag(conv);
 
     err = otrl_message_sending(otrg_plugin_userstate, &ui_ops, NULL,
 	    accountname, protocol, username, instance, *message, NULL,
@@ -1057,34 +1057,13 @@ ConnContext *otrg_plugin_conv_to_context(PurpleConversation *conv,
     return context;
 }
 
-/* Given a PurpleConversation, return the selected instag */
-otrl_instag_t otrg_plugin_conv_to_selected_instag(PurpleConversation *conv,
-	otrl_instag_t default_val)
-{
-    otrl_instag_t *selected_instance;
-
-    if (!conv || !conv->data) {
-	return default_val;
-    }
-
-    selected_instance = purple_conversation_get_data(conv,
-	    "otr-ui_selected_ctx");
-
-    if (!selected_instance) {
-	return default_val;
-    }
-
-    return *selected_instance;
-}
-
 /* Given a PurpleConversation, return the selected ConnContext */
 ConnContext* otrg_plugin_conv_to_selected_context(PurpleConversation *conv,
 	int force_create)
 {
     otrl_instag_t selected_instance;
 
-    selected_instance = otrg_plugin_conv_to_selected_instag(conv,
-	    OTRL_INSTAG_BEST);
+    selected_instance = otrg_conversation_get_selected_instag(conv);
 
     return otrg_plugin_conv_to_context(conv, selected_instance, force_create);
 }

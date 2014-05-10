@@ -3154,7 +3154,7 @@ static gboolean check_incoming_instance_change(PurpleAccount *account,
 	return 0;
     }
 
-    selected_instance = otrg_plugin_conv_to_selected_instag(conv, 0);
+    selected_instance = otrg_conversation_get_selected_instag(conv);
     current_out = otrg_plugin_conv_to_selected_context(conv, 0);
 
     last_received_instance = g_hash_table_lookup(conv->data,

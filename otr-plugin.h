@@ -39,10 +39,6 @@ extern OtrlUserState otrg_plugin_userstate;
 ConnContext* otrg_plugin_conv_to_selected_context(PurpleConversation *conv,
 	int force_create);
 
-/* Given a PurpleConversation, return the selected instag. */
-otrl_instag_t otrg_plugin_conv_to_selected_instag(PurpleConversation *conv,
-	otrl_instag_t default_value);
-
 /* Send an IM from the given account to the given recipient.  Display an
  * error dialog if that account isn't currently logged in. */
 void otrg_plugin_inject_message(PurpleAccount *account, const char *recipient,
