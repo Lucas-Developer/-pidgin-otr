@@ -117,29 +117,6 @@ typedef struct {
     ConnContext *context;
 } ConvOrContext;
 
-static gint get_new_instance_index(PurpleConversation *conv)
-{
-    gint * max_index = (gint *)
-	    purple_conversation_get_data(conv, "otr-max_idx");
-    *max_index = (*max_index) + 1;
-    return *max_index;
-}
-
-static gint get_context_instance_to_index(PurpleConversation *conv,
-	ConnContext *context) {
-    GHashTable * conv_to_idx_map =
-	    purple_conversation_get_data(conv, "otr-conv_to_idx");
-    gpointer index = NULL;
-
-    if (!g_hash_table_lookup_extended(conv_to_idx_map, context, NULL, &index)) {
-	index = g_malloc(sizeof(gint));
-	*(gint *)index = get_new_instance_index(conv);
-	g_hash_table_replace(conv_to_idx_map, context, index);
-    }
-
-    return *(gint *)index;
-}
-
 static void close_progress_window(SMPData *smp_data)
 {
     if (smp_data->smp_progress_dialog) {
@@ -2111,8 +2088,8 @@ static void select_meta_ctx(GtkWidget *widget, gpointer data)
 			"one (%u). Your buddy may not receive your messages."
 			" Use the icon menu above to select a different "
 			"outgoing session."),
-			get_context_instance_to_index(conv, context),
-			get_context_instance_to_index(conv, recent_context));
+			otrg_context_instance_to_index(conv, context),
+			otrg_context_instance_to_index(conv, recent_context));
 		otrg_gtk_dialog_display_otr_message(context->accountname,
 			context->protocol, context->username, buf, 0);
 		g_free(buf);
@@ -2157,8 +2134,8 @@ static void select_menu_ctx(GtkWidget *widget, gpointer data)
 		"session (%u) is not the most recently active one (%u). "
 		"Your buddy may not receive your messages. Use the icon menu "
 		"above to select a different outgoing session."),
-		get_context_instance_to_index(conv, context),
-		get_context_instance_to_index(conv, recent_context));
+		otrg_context_instance_to_index(conv, context),
+		otrg_context_instance_to_index(conv, recent_context));
 	otrg_gtk_dialog_display_otr_message(context->accountname,
 		context->protocol, context->username, buf, 0);
 	g_free(buf);
@@ -2263,7 +2240,7 @@ static void otr_add_buddy_instances_top_menu(PidginConversation *gtkconv,
 	}
 
 
-	instance_i = get_context_instance_to_index(conv, curr_context);
+	instance_i = otrg_context_instance_to_index(conv, curr_context);
 
 	text = g_strdup_printf(_("Session %u"), instance_i);
 
@@ -2642,7 +2619,6 @@ static void conversation_destroyed(PurpleConversation *conv, void *data)
     PidginWindow *win;
     GHashTable * conv_or_ctx_map;
     GHashTable * conv_to_idx_map;
-    gint * max_instance_idx;
 
     if (menu) gtk_object_destroy(GTK_OBJECT(menu));
 
@@ -2651,11 +2627,6 @@ static void conversation_destroyed(PurpleConversation *conv, void *data)
 
     conv_to_idx_map = purple_conversation_get_data(conv, "otr-conv_to_idx");
     g_hash_table_destroy(conv_to_idx_map);
-
-    max_instance_idx = purple_conversation_get_data(conv, "otr-max_idx");
-    if (max_instance_idx) {
-	g_free(max_instance_idx);
-    }
 
     purple_conversation_set_data(conv, "otr-label", NULL);
     purple_conversation_set_data(conv, "otr-button", NULL);
@@ -2668,7 +2639,6 @@ static void conversation_destroyed(PurpleConversation *conv, void *data)
     purple_conversation_set_data(conv, "otr-select_recent", NULL);
     purple_conversation_set_data(conv, "otr-convorctx", NULL);
     purple_conversation_set_data(conv, "otr-conv_to_idx", NULL);
-    purple_conversation_set_data(conv, "otr-max_idx", NULL);
 
     otrg_conversation_cleanup_vars(conv);
 
@@ -2708,7 +2678,6 @@ static void otrg_gtk_dialog_new_purple_conv(PurpleConversation *conv)
     GHashTable * conv_or_ctx_map;
     GHashTable * ctx_to_idx_map;
 
-    gint * max_instance_idx;
     gboolean show_otr_button;
 
     /* Do nothing if this isn't an IM conversation */
@@ -2760,11 +2729,6 @@ static void otrg_gtk_dialog_new_purple_conv(PurpleConversation *conv)
     ctx_to_idx_map = g_hash_table_new_full(g_direct_hash, g_direct_equal, NULL,
 	    g_free);
     purple_conversation_set_data(conv, "otr-conv_to_idx", ctx_to_idx_map);
-
-    max_instance_idx = g_malloc(sizeof(gint));
-    *max_instance_idx = 0;
-    purple_conversation_set_data(conv, "otr-max_idx",
-	    (gpointer)max_instance_idx);
 
     otrg_conversation_init_vars(conv);
 
