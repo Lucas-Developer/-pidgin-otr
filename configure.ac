@@ -138,6 +138,17 @@ AC_COMPILE_IFELSE([AC_LANG_PROGRAM([], [
 #endif
 ])], have_clang=yes, have_clang=no)
 
+enable_clang_address_sanitizer=no
+
+if test "x$have_clang" = "xyes" -a "x$enable_clang_address_sanitizer" = "xyes"; then
+    dnl Enable address sanitizer.
+    OTR_CHECK_CFLAGS(-faddress-sanitizer)
+    OTR_CHECK_CFLAGS(-g)
+    OTR_CHECK_CFLAGS(-fno-omit-frame-pointer)
+    OTR_CHECK_CFLAGS(-fno-inline)
+    OTR_CHECK_CFLAGS(-fno-optimize-sibling-calls)
+fi
+
 if test x$enable_gcc_hardening != xno; then
     CFLAGS="$CFLAGS -D_FORTIFY_SOURCE=2"
     if test x$have_clang = xyes; then
