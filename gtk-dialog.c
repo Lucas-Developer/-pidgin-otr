@@ -166,7 +166,7 @@ static void otrg_gtk_dialog_free_smp_data(PurpleConversation *conv)
 
     free(smp_data);
 
-    g_hash_table_remove(conv->data, "otr-smpdata");
+    purple_conversation_set_data(conv, "otr-smpdata", NULL);
 }
 
 static void otrg_gtk_dialog_add_smp_data(PurpleConversation *conv)
@@ -2832,21 +2832,21 @@ static void conversation_destroyed(PurpleConversation *conv, void *data)
 	g_free(last_received_instance);
     }
 
-    g_hash_table_remove(conv->data, "otr-label");
-    g_hash_table_remove(conv->data, "otr-button");
-    g_hash_table_remove(conv->data, "otr-icon");
-    g_hash_table_remove(conv->data, "otr-menu");
-    g_hash_table_remove(conv->data, "otr-private");
-    g_hash_table_remove(conv->data, "otr-authenticated");
-    g_hash_table_remove(conv->data, "otr-finished");
-    g_hash_table_remove(conv->data, "otr-select_best");
-    g_hash_table_remove(conv->data, "otr-select_recent");
-    g_hash_table_remove(conv->data, "otr-convorctx");
-    g_hash_table_remove(conv->data, "otr-conv_to_idx");
-    g_hash_table_remove(conv->data, "otr-max_idx");
-    g_hash_table_remove(conv->data, "otr-conv_multi_instances");
-    g_hash_table_remove(conv->data, "otr-warned_instances");
-    g_hash_table_remove(conv->data, "otr-last_received_ctx");
+    purple_conversation_set_data(conv, "otr-label", NULL);
+    purple_conversation_set_data(conv, "otr-button", NULL);
+    purple_conversation_set_data(conv, "otr-icon", NULL);
+    purple_conversation_set_data(conv, "otr-menu", NULL);
+    purple_conversation_set_data(conv, "otr-private", NULL);
+    purple_conversation_set_data(conv, "otr-authenticated", NULL);
+    purple_conversation_set_data(conv, "otr-finished", NULL);
+    purple_conversation_set_data(conv, "otr-select_best", NULL);
+    purple_conversation_set_data(conv, "otr-select_recent", NULL);
+    purple_conversation_set_data(conv, "otr-convorctx", NULL);
+    purple_conversation_set_data(conv, "otr-conv_to_idx", NULL);
+    purple_conversation_set_data(conv, "otr-max_idx", NULL);
+    purple_conversation_set_data(conv, "otr-conv_multi_instances", NULL);
+    purple_conversation_set_data(conv, "otr-warned_instances", NULL);
+    purple_conversation_set_data(conv, "otr-last_received_ctx", NULL);
 
     otrg_gtk_dialog_free_smp_data(conv);
 
@@ -3150,14 +3150,14 @@ static gboolean check_incoming_instance_change(PurpleAccount *account,
     ConnContext *received_context = NULL;
     ConnContext *current_out = NULL;
 
-    if (!conv || !conv->data) {
+    if (!conv) {
 	return 0;
     }
 
     selected_instance = otrg_plugin_conv_to_selected_instag(conv, 0);
     current_out = otrg_plugin_conv_to_selected_context(conv, 0);
 
-    last_received_instance = g_hash_table_lookup(conv->data,
+    last_received_instance = purple_conversation_get_data(conv,
 	    "otr-last_received_ctx");
 
     if (!last_received_instance) {
