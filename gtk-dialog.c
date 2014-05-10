@@ -2657,7 +2657,6 @@ static void conversation_destroyed(PurpleConversation *conv, void *data)
     gint * max_instance_idx;
     gboolean * is_conv_multi_instance;
     gboolean * have_warned_instances;
-    otrl_instag_t * last_received_instance;
 
     if (menu) gtk_object_destroy(GTK_OBJECT(menu));
 
@@ -2684,12 +2683,6 @@ static void conversation_destroyed(PurpleConversation *conv, void *data)
 	g_free(have_warned_instances);
     }
 
-    last_received_instance = purple_conversation_get_data(conv,
-	    "otr-last_received_ctx");
-    if (last_received_instance) {
-	g_free(last_received_instance);
-    }
-
     purple_conversation_set_data(conv, "otr-label", NULL);
     purple_conversation_set_data(conv, "otr-button", NULL);
     purple_conversation_set_data(conv, "otr-icon", NULL);
@@ -2704,7 +2697,8 @@ static void conversation_destroyed(PurpleConversation *conv, void *data)
     purple_conversation_set_data(conv, "otr-max_idx", NULL);
     purple_conversation_set_data(conv, "otr-conv_multi_instances", NULL);
     purple_conversation_set_data(conv, "otr-warned_instances", NULL);
-    purple_conversation_set_data(conv, "otr-last_received_ctx", NULL);
+
+    otrg_conversation_cleanup_vars(conv);
 
     otrg_gtk_dialog_free_smp_data(conv);
 
@@ -2745,7 +2739,6 @@ static void otrg_gtk_dialog_new_purple_conv(PurpleConversation *conv)
     gint * max_instance_idx;
     gboolean * is_conv_multi_instance;
     gboolean * have_warned_instances;
-    otrl_instag_t * last_received_instance;
     gboolean show_otr_button;
 
     /* Do nothing if this isn't an IM conversation */
@@ -2813,10 +2806,7 @@ static void otrg_gtk_dialog_new_purple_conv(PurpleConversation *conv)
     purple_conversation_set_data(conv, "otr-warned_instances",
 	    (gpointer)have_warned_instances);
 
-    last_received_instance = g_malloc(sizeof(otrl_instag_t));
-    *last_received_instance = OTRL_INSTAG_BEST; /* cannot be received */
-    purple_conversation_set_data(conv, "otr-last_received_ctx",
-	    (gpointer)last_received_instance);
+    otrg_conversation_init_vars(conv);
 
     /* Make the button */
     button = gtk_button_new();
@@ -3002,7 +2992,7 @@ static char* conversation_timestamp(PurpleConversation *conv, time_t mtime,
 static gboolean check_incoming_instance_change(PurpleAccount *account,
 	char *sender, char *message, PurpleConversation *conv,
 	PurpleMessageFlags flags) {
-    otrl_instag_t * last_received_instance;
+    otrl_instag_t last_received_instance;
     otrl_instag_t selected_instance;
     gboolean have_received = FALSE;
     ConnContext *received_context = NULL;
@@ -3015,15 +3005,13 @@ static gboolean check_incoming_instance_change(PurpleAccount *account,
     selected_instance = otrg_conversation_get_selected_instag(conv);
     current_out = otrg_plugin_conv_to_selected_context(conv, 0);
 
-    last_received_instance = purple_conversation_get_data(conv,
-	    "otr-last_received_ctx");
-
-    if (!last_received_instance) {
-	return 0; /* OTR disabled for this buddy */
+    if (!otrg_conversation_is_otr_enabled(conv)) {
+	return 0;
     }
 
-    if (*last_received_instance == OTRL_INSTAG_MASTER || 
-	    *last_received_instance >= OTRL_MIN_VALID_INSTAG) {
+    last_received_instance = otrg_conversation_get_last_received_instance(conv);
+    if (last_received_instance == OTRL_INSTAG_MASTER ||
+	    last_received_instance >= OTRL_MIN_VALID_INSTAG) {
 	have_received = TRUE;
     }
 
@@ -3035,14 +3023,15 @@ static gboolean check_incoming_instance_change(PurpleAccount *account,
     }
 
     if (have_received &&
-	    *last_received_instance != received_context->their_instance &&
+	    last_received_instance != received_context->their_instance &&
 	    selected_instance != OTRL_INSTAG_MASTER &&
 	    selected_instance < OTRL_MIN_VALID_INSTAG) {
 	dialog_update_label_conv(conv,
 		otrg_plugin_context_to_trust(current_out));
     }
 
-    *last_received_instance = received_context->their_instance;
+    otrg_conversation_set_last_received_instance(conv,
+	received_context->their_instance);
 
     return 0;
 }
