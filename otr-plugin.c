@@ -134,9 +134,11 @@ PurplePlugin *otrg_plugin_handle;
 /* We'll only use the one OtrlUserState. */
 OtrlUserState otrg_plugin_userstate = NULL;
 
+#if !PURPLE_VERSION_CHECK(3,0,0)
 /* GLib HashTable for storing the maximum message size for various
  * protocols. */
 GHashTable* mms_table = NULL;
+#endif
 
 
 /* Send an IM from the given account to the given recipient.  Display an
@@ -622,11 +624,25 @@ static void still_secure_cb(void *opdata, ConnContext *context, int is_reply)
 
 static int max_message_size_cb(void *opdata, ConnContext *context)
 {
+#if PURPLE_VERSION_CHECK(3,0,0)
+    gssize max_size;
+    PurpleConversation *conv = otrg_plugin_context_to_conv(context, FALSE);
+
+    if (conv != NULL)
+	max_size = purple_conversation_get_max_message_size(conv);
+    else {
+	max_size = purple_prpl_get_max_message_size(
+	    purple_find_prpl(context->protocol));
+    }
+
+    return (max_size > 0) ? max_size : 0;
+#else
     void* lookup_result = g_hash_table_lookup(mms_table, context->protocol);
     if (!lookup_result)
 	return 0;
     else
 	return *((int*)lookup_result);
+#endif
 }
 
 static const char* otr_error_message_cb(void *opdata, ConnContext *context,
@@ -1304,6 +1320,7 @@ static void process_quitting(void)
     }
 }
 
+#if !PURPLE_VERSION_CHECK(3,0,0)
 /* Read the maxmsgsizes from a FILE* into the given GHashTable.
  * The FILE* must be open for reading. */
 static void mms_read_FILEp(FILE *mmsf, GHashTable *ght)
@@ -1397,6 +1414,7 @@ static void otrg_free_mms_table()
     g_hash_table_destroy(mms_table);
     mms_table = NULL;
 }
+#endif
 
 static gboolean otr_plugin_unload(PurplePlugin *handle);
 
@@ -1487,7 +1505,9 @@ static gboolean otr_plugin_load(PurplePlugin *handle)
     g_free(storefile);
     g_free(instagfile);
 
+#if !PURPLE_VERSION_CHECK(3,0,0)
     otrg_init_mms_table();
+#endif
 
     otrg_plugin_handle = handle;
 
@@ -1591,7 +1611,9 @@ static gboolean otr_plugin_unload(PurplePlugin *handle)
     otrl_userstate_free(otrg_plugin_userstate);
     otrg_plugin_userstate = NULL;
 
+#if !PURPLE_VERSION_CHECK(3,0,0)
     otrg_free_mms_table();
+#endif
 
     return 1;
 }

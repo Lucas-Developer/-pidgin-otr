@@ -28,7 +28,9 @@
 #define PRIVKEYFNAME "otr.private_key"
 #define STOREFNAME "otr.fingerprints"
 #define INSTAGFNAME "otr.instance_tags"
+#if !PURPLE_VERSION_CHECK(3,0,0)
 #define MAXMSGSIZEFNAME "otr.max_message_size"
+#endif
 
 extern PurplePlugin *otrg_plugin_handle;
 
