@@ -310,6 +310,8 @@ otrg_conversation_set_last_received_instance(PurpleConversation *conv,
 otrl_instag_t
 otrg_conversation_get_last_received_instance(PurpleConversation *conv)
 {
+	g_return_val_if_fail(conv != NULL, OTRL_INSTAG_BEST);
+
 	return GPOINTER_TO_INT(otrg_conv_get_data(conv,
 		"otr-last_received_ctx"));
 }

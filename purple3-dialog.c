@@ -1359,8 +1359,7 @@ otrg_purple3_conv_update_state(ConnContext *context)
 	ConnContext *m_context = NULL;
 	GList *contexts;
 	guint contexts_count = 0;
-	PurpleAccount *account;
-	const gchar *cname;
+	OtrlPolicy policy;
 
 	g_return_if_fail(context != NULL);
 
@@ -1378,9 +1377,10 @@ otrg_purple3_conv_update_state(ConnContext *context)
 		contexts_count--;
 	otrg_conversation_set_multi_instance(conv, (contexts_count >= 2));
 
-	account = purple_conversation_get_account(conv);
-	cname = purple_conversation_get_name(conv);
-	if (otrg_buddy_prefs_get_policy(account, cname) == OTRL_POLICY_NEVER) {
+	policy = otrg_buddy_prefs_get_policy(
+		purple_conversation_get_account(conv),
+		purple_conversation_get_name(conv));
+	if (policy == OTRL_POLICY_NEVER) {
 		purple_conversation_set_e2ee_state(conv, NULL);
 		return;
 	}

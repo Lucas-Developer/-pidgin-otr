@@ -308,7 +308,7 @@ otrg_plugin_privkeygen_waitall(void)
 	otrg_dialog_private_key_wait_done(tdata->wait_handle);
 	otrl_privkey_generate_cancelled(otrg_plugin_userstate, tdata->new_key);
 	g_free(tdata);
-     }
+    }
 
     it = otrg_plugin_privkeygen_zombies;
     otrg_plugin_privkeygen_zombies = NULL;
