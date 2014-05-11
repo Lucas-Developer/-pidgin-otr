@@ -102,6 +102,33 @@
 #define g_fopen fopen
 #endif
 
+#if !PURPLE_VERSION_CHECK(3,0,0)
+#define PurpleConversationUpdateType PurpleConvUpdateType
+#define PurpleIMConversation PurpleConversation
+#define PURPLE_CONVERSATION_UPDATE_LOGGING PURPLE_CONV_UPDATE_LOGGING
+#define PURPLE_CONVERSATION(conv) (conv)
+#define PURPLE_IS_BUDDY(node) \
+    PURPLE_BLIST_NODE_IS_BUDDY(node)
+#define purple_serv_send_im(conn, name, msg, flags) \
+    serv_send_im((conn), (name), (msg), (flags))
+#define purple_blist_find_buddy(account, recipient) \
+    purple_find_buddy((account), (recipient))
+
+static inline PurpleIMConversation *
+purple_conversations_find_im_with_account(const gchar *username,
+    const PurpleAccount *account)
+{
+    return purple_find_conversation_with_account(
+	PURPLE_CONV_TYPE_IM, username, account);
+}
+
+static inline PurpleIMConversation *
+purple_im_conversation_new(PurpleAccount *account, const gchar *username)
+{
+    return purple_conversation_new(PURPLE_CONV_TYPE_IM, account, username);
+}
+#endif
+
 PurplePlugin *otrg_plugin_handle;
 
 /* We'll only use the one OtrlUserState. */
@@ -132,7 +159,7 @@ void otrg_plugin_inject_message(PurpleAccount *account, const char *recipient,
 	g_free(msg);
 	return;
     }
-    serv_send_im(connection, recipient, message, 0);
+    purple_serv_send_im(connection, recipient, message, 0);
 }
 
 /* Display a notification message for a particular accountname /
@@ -463,7 +490,7 @@ static int is_logged_in_cb(void *opdata, const char *accountname,
     account = purple_accounts_find(accountname, protocol);
     if (!account) return -1;
 
-    buddy = purple_find_buddy(account, recipient);
+    buddy = purple_blist_find_buddy(account, recipient);
     if (!buddy) return -1;
 
     return (PURPLE_BUDDY_IS_ONLINE(buddy));
@@ -1137,11 +1164,11 @@ static void process_conv_create_cb(PurpleConversation *conv, void *data)
 }
 
 static void process_conv_updated(PurpleConversation *conv,
-	PurpleConvUpdateType type, void *data)
+	PurpleConversationUpdateType type, void *data)
 {
     /* See if someone's trying to turn logging on for this conversation,
      * and we don't want them to. */
-    if (type == PURPLE_CONV_UPDATE_LOGGING) {
+    if (type == PURPLE_CONVERSATION_UPDATE_LOGGING) {
 	ConnContext *context;
 	PurpleAccount *account = purple_conversation_get_account(conv);
 	gboolean avoid_logging;
@@ -1170,7 +1197,7 @@ static void supply_extended_menu(PurpleBlistNode *node, GList **menu)
     PurpleAccount *acct;
     const char *proto;
 
-    if (!PURPLE_BLIST_NODE_IS_BUDDY(node)) return;
+    if (!PURPLE_IS_BUDDY(node)) return;
 
     /* Extract the account, and then the protocol, for this buddy */
     buddy = (PurpleBuddy *)node;
@@ -1223,18 +1250,16 @@ PurpleConversation *otrg_plugin_userinfo_to_conv(const char *accountname,
 	const char *protocol, const char *username, int force_create)
 {
     PurpleAccount *account;
-    PurpleConversation *conv;
+    PurpleIMConversation *conv;
 
     account = purple_accounts_find(accountname, protocol);
     if (account == NULL) return NULL;
 
-    conv = purple_find_conversation_with_account(PURPLE_CONV_TYPE_IM,
-	    username, account);
-    if (conv == NULL && force_create) {
-	conv = purple_conversation_new(PURPLE_CONV_TYPE_IM, account, username);
-    }
+    conv = purple_conversations_find_im_with_account(username, account);
+    if (conv == NULL && force_create)
+	conv = purple_im_conversation_new(account, username);
 
-    return conv;
+    return PURPLE_CONVERSATION(conv);
 }
 
 /* Find the PurpleConversation appropriate to the given ConnContext.  If
@@ -1504,10 +1529,23 @@ static gboolean otr_plugin_load(PurplePlugin *handle)
 	return 0;
     }
 
+#if PURPLE_VERSION_CHECK(3,0,0)
+    g_list_foreach(purple_conversations_get_ims(),
+	(GFunc)process_conv_create_cb, NULL);
+#else
     purple_conversation_foreach(process_conv_create);
+#endif
 
     return 1;
 }
+
+#if PURPLE_VERSION_CHECK(3,0,0)
+static void otrg_dialog_remove_conv_cb(PurpleConversation *conv,
+    gpointer _unused)
+{
+    otrg_dialog_remove_conv(conv);
+}
+#endif
 
 static gboolean otr_plugin_unload(PurplePlugin *handle)
 {
@@ -1520,7 +1558,12 @@ static gboolean otr_plugin_unload(PurplePlugin *handle)
 
     otrg_plugin_privkeygen_waitall();
 
+#if PURPLE_VERSION_CHECK(3,0,0)
+    g_list_foreach(purple_conversations_get_ims(),
+	(GFunc)otrg_dialog_remove_conv_cb, NULL);
+#else
     purple_conversation_foreach(otrg_dialog_remove_conv);
+#endif
 
     otrg_dialog_cleanup();
     otrg_ui_cleanup();
