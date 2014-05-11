@@ -32,6 +32,7 @@ EXTRA_DIST = \
 	Makefile.static \
 	common.h \
 	dialogs.h \
+	fprint-verificator.h \
 	gtk-dialog.h \
 	otr-icons.h \
 	otr-plugin.h \

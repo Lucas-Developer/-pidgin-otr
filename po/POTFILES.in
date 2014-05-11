@@ -4,6 +4,7 @@ common.c
 common.h
 dialogs.c
 dialogs.h
+fprint-verificator.h
 gtk-dialog.c
 gtk-dialog.h
 gtk-ui.c

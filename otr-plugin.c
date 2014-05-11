@@ -74,6 +74,10 @@
 #include "dialogs.h"
 #include "otr-plugin.h"
 
+#if PURPLE_VERSION_CHECK(3,0,0)
+#include "fprint-verificator.h"
+#endif
+
 #ifdef USING_GTK
 /* purple-otr GTK headers */
 #include "gtk-ui.h"
@@ -134,12 +138,43 @@ PurplePlugin *otrg_plugin_handle;
 /* We'll only use the one OtrlUserState. */
 OtrlUserState otrg_plugin_userstate = NULL;
 
+#if PURPLE_VERSION_CHECK(3,0,0)
+GSList *otrg_fprint_verificators = NULL;
+#endif
+
 #if !PURPLE_VERSION_CHECK(3,0,0)
 /* GLib HashTable for storing the maximum message size for various
  * protocols. */
 GHashTable* mms_table = NULL;
 #endif
 
+
+#if PURPLE_VERSION_CHECK(3,0,0)
+static gboolean
+otrg_verificator_register_cb(OtrgFingerprintVerificator *verf)
+{
+    g_return_val_if_fail(verf != NULL, FALSE);
+    g_return_val_if_fail(OTRG_FPRINT_VERIFICATOR_HAS_FIELD(verf, name), FALSE);
+    g_return_val_if_fail(
+	OTRG_FPRINT_VERIFICATOR_HAS_FIELD(verf, verify_cb), FALSE);
+
+    g_return_val_if_fail(
+	g_slist_find(otrg_fprint_verificators, verf) == NULL, FALSE);
+
+    otrg_fprint_verificators = g_slist_append(otrg_fprint_verificators, verf);
+
+    return TRUE;
+}
+
+static void
+otrg_verificator_unregister_cb(OtrgFingerprintVerificator *verf)
+{
+    if (verf == NULL)
+	return;
+
+    otrg_fprint_verificators = g_slist_remove(otrg_fprint_verificators, verf);
+}
+#endif
 
 /* Send an IM from the given account to the given recipient.  Display an
  * error dialog if that account isn't currently logged in. */
@@ -1526,6 +1561,22 @@ static gboolean otr_plugin_load(PurplePlugin *handle)
 
     otrg_ui_update_fingerprint();
 
+#if PURPLE_VERSION_CHECK(3,0,0)
+    /* the pointer at the end is a OtrgFingerprintVerificator */
+    purple_signal_register(handle, "otr-verificator-register",
+	purple_marshal_BOOLEAN__POINTER,
+	G_TYPE_BOOLEAN, 1, G_TYPE_POINTER);
+
+    /* the same as in otr-verificator-register */
+    purple_signal_register(handle, "otr-verificator-unregister",
+	purple_marshal_VOID__POINTER, G_TYPE_NONE, 1, G_TYPE_POINTER);
+
+    purple_signal_connect(handle, "otr-verificator-register", handle,
+	PURPLE_CALLBACK(otrg_verificator_register_cb), NULL);
+    purple_signal_connect(handle, "otr-verificator-unregister", handle,
+	PURPLE_CALLBACK(otrg_verificator_unregister_cb), NULL);
+#endif
+
     purple_signal_connect(core_handle, "quitting", otrg_plugin_handle,
 	    PURPLE_CALLBACK(process_quitting), NULL);
     purple_signal_connect(conv_handle, "sending-im-msg", otrg_plugin_handle,
@@ -1604,6 +1655,11 @@ static gboolean otr_plugin_unload(PurplePlugin *handle)
 	    PURPLE_CALLBACK(process_connection_change));
     purple_signal_disconnect(blist_handle, "blist-node-extended-menu",
 	    otrg_plugin_handle, PURPLE_CALLBACK(supply_extended_menu));
+
+#if PURPLE_VERSION_CHECK(3,0,0)
+    purple_signal_unregister(handle, "otr-verificator-register");
+    purple_signal_unregister(handle, "otr-verificator-unregister");
+#endif
 
     /* Stop the timer, if necessary */
     stop_start_timer(0);

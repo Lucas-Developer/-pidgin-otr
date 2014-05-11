@@ -36,6 +36,14 @@ extern PurplePlugin *otrg_plugin_handle;
 
 extern OtrlUserState otrg_plugin_userstate;
 
+#if PURPLE_VERSION_CHECK(3,0,0)
+extern GSList *otrg_fprint_verificators;
+
+#define OTRG_FPRINT_VERIFICATOR_HAS_FIELD(verf, member) \
+    (offsetof(OtrgFingerprintVerificator, member) < (verf)->struct_size && \
+    (verf)->member != NULL)
+#endif
+
 /* Given a PurpleConversation, return the ConnContext corresponding to the
  * selected instance tag. */
 ConnContext* otrg_plugin_conv_to_selected_context(PurpleConversation *conv,
