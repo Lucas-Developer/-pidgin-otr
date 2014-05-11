@@ -11,5 +11,9 @@ gtk-ui.c
 gtk-ui.h
 otr-plugin.c
 otr-plugin.h
+purple3-dialog.c
+purple3-dialog.h
+purple3-ui.c
+purple3-ui.h
 ui.c
 ui.h

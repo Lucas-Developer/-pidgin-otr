@@ -76,6 +76,8 @@
 
 #if PURPLE_VERSION_CHECK(3,0,0)
 #include "fprint-verificator.h"
+#include "purple3-dialog.h"
+#include "purple3-ui.h"
 #endif
 
 #ifdef USING_GTK
@@ -1682,7 +1684,19 @@ int otrg_plugin_proto_supports_otr(const char *proto)
     return 1;
 }
 
-#ifdef USING_GTK
+#if PURPLE_VERSION_CHECK(3,0,0)
+
+static PurplePluginUiInfo prefs_info =
+{
+    NULL,
+    otrg_purple3_ui_prefs
+};
+
+#define UI_INFO NULL
+#define PLUGIN_TYPE NULL
+#define PREFS_INFO &prefs_info
+
+#elif defined(USING_GTK)
 
 static PidginPluginUiInfo ui_info =
 {
@@ -1739,7 +1753,10 @@ static void
 __init_plugin(PurplePlugin *plugin)
 {
     /* Set up the UI ops */
-#ifdef USING_GTK
+#if PURPLE_VERSION_CHECK(3,0,0)
+    otrg_ui_set_ui_ops(otrg_purple3_ui_get_ui_ops());
+    otrg_dialog_set_ui_ops(otrg_purple3_dialog_get_ui_ops());
+#elif defined(USING_GTK)
     otrg_ui_set_ui_ops(otrg_gtk_ui_get_ui_ops());
     otrg_dialog_set_ui_ops(otrg_gtk_dialog_get_ui_ops());
 #endif

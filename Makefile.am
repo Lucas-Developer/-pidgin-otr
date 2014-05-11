@@ -36,6 +36,8 @@ EXTRA_DIST = \
 	gtk-dialog.h \
 	otr-icons.h \
 	otr-plugin.h \
+	purple3-dialog.h \
+	purple3-ui.h \
 	gtk-ui.h \
 	intltool-extract.in \
 	intltool-merge.in \
@@ -65,4 +67,14 @@ EXTRA_DIST += \
 	gtk-dialog.c \
 	gtk-ui.c \
 	tooltipmenu.c
+endif
+
+if FOR_LIBPURPLE3
+pidgin_otr_la_SOURCES += \
+	purple3-dialog.c \
+	purple3-ui.c
+else
+EXTRA_DIST += \
+	purple3-dialog.c \
+	purple3-ui.c
 endif
