@@ -87,11 +87,9 @@ ifdef SOURCE_DATE_EPOCH
     # We're doing a reproducible build
     REPROCC = faketime -f "`date -d@$(SOURCE_DATE_EPOCH) +'%F %T'`" $(CC)
     REPROSTRIP = faketime -f "`date -d@$(SOURCE_DATE_EPOCH) +'%F %T'`" i586-mingw32msvc-strip
-    REPROZIP = faketime -f "`date -d@$(SOURCE_DATE_EPOCH) +'%F %T'`" zip
 else
     REPROCC = $(CC)
     REPROSTRIP = i586-mingw32msvc-strip
-    REPROZIP = zip
 endif
 
 all: $(TARGET)
@@ -134,6 +132,7 @@ prepare_win32_export: all
 	if [ -n "$(SOURCE_DATE_EPOCH)" ]; then \
 	    find win32_export -exec touch -d @$(SOURCE_DATE_EPOCH) {} \; ; \
 	fi
+	chmod -R u=rwX,go=rX win32_export
 
 installer: prepare_win32_export
 	makensis packaging/windows/pidgin-otr.nsi
@@ -143,7 +142,7 @@ installer: prepare_win32_export
 zip: prepare_win32_export
 	rm -f $(ZIPFILE)
 	cd win32_export; \
-	$(REPROZIP) $(ZIPFILE) `find . -type f | LANG=C sort` ; \
+	TZ=UTC zip -o -X $(ZIPFILE) `find . -type f | LANG=C sort` ; \
 	mv $(ZIPFILE) ../;
 	rm -rf win32_export
 
