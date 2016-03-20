@@ -9,7 +9,7 @@
 # We need to have bison installed, or else gettext configures itself
 # differently and the binary comes out different.  The rest should be
 # obvious.
-sudo apt-get install mingw32 nsis faketime bison zip unzip tar \
+sudo apt-get install -y mingw32 nsis faketime bison zip unzip tar \
 	wget diffutils findutils build-essential automake patch \
 	perl-base coreutils gettext libtool
 
