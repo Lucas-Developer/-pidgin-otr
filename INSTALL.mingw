@@ -5,7 +5,7 @@
 # You may want a clean mingw32 environment first:
 # sudo apt-get purge mingw32 mingw32-runtime mingw32-binutils
 # sudo rm -rf /usr/i586-mingw32msvc
-sudo apt-get install mingw32 nsis
+sudo apt-get install mingw32 nsis faketime
 
 export SOURCE_DATE_EPOCH=`cat source_date_epoch`
 
@@ -122,6 +122,10 @@ EOD
         --enable-static --disable-shared \
         --with-libgcrypt-prefix=/usr/i586-mingw32msvc
   make || exit 1
+  # Rebuild the toolkit binaries with $SOURCE_DATE_EPOCH as the
+  # PE header timestamp
+  rm toolkit/*.exe toolkit/.libs/*.exe
+  make CC="faketime -f \"`date -d@$SOURCE_DATE_EPOCH +'%F %T'`\" i586-mingw32msvc-gcc" || exit 1
   sudo make install || exit 1
   cd ..
 
@@ -131,6 +135,7 @@ EOD
   # Ensure either pkg-config will correctly resolve all the dependencies for
   # glib-2.0 and gtk+-2.0. There is a README in the GTK+ bundle about this, or
   # uncomment (and perhaps revise) the hardcoded list of includes for GTK_HDRS
+  sudo rm -rf /usr/i586-mingw32msvc/misc/gtk_bundle
   sudo mkdir -p /usr/i586-mingw32msvc/misc/gtk_bundle
   sudo unzip -d /usr/i586-mingw32msvc/misc/gtk_bundle gtk+-bundle_2.24.10-20120208_win32.zip
   unzip pidgin-2.10.12-win32-bin.zip
@@ -141,11 +146,12 @@ EOD
   sudo mv pidgin-2.10.12/pidgin /usr/i586-mingw32msvc/include/
   cd ..
   # Build pidgin-otr plugin
+  make LIBOTRSRCDIR=pidgin-otr-win32/libotr-4.1.1 -f Makefile.mingw clean || exit 1
   make LIBOTRSRCDIR=pidgin-otr-win32/libotr-4.1.1 -f Makefile.mingw || exit 1
   # This should build the nsis installer
   rm -rf win32_export
   make LIBOTRSRCDIR=pidgin-otr-win32/libotr-4.1.1 -f Makefile.mingw installer || exit 1
-  mv pidgin-otr-win32/packaging/windows/pidgin-otr-4.0.2.exe .
+  mv packaging/windows/pidgin-otr-4.0.2.exe .
   # This should build the zipfile
   make LIBOTRSRCDIR=pidgin-otr-win32/libotr-4.1.1 -f Makefile.mingw zip || exit 1
 

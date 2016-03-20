@@ -75,7 +75,6 @@ LDLIBS = $(LIBOTRLIBDIR)/libotr.a -L$(GTK_WIN32_BUNDLE)/lib \
 	 -lgdk_pixbuf-2.0 -lgobject-2.0 -lpidgin -llibpurple \
 	 -lgcrypt -lgpg-error -L$(LIBINTLLIBDIR) -lintl -lssp
 
-CC ?= gcc
 override CFLAGS += -g -O2 -Wall $(CC_HARDENING_OPTIONS) \
 	$(PIDGIN_HEADERS) $(PURPLE_HEADERS) \
 	$(GTK_HDRS) -I$(LIBOTRINCDIR) $(FPIC) -DUSING_GTK -DPURPLE_PLUGINS \
@@ -83,12 +82,23 @@ override CFLAGS += -g -O2 -Wall $(CC_HARDENING_OPTIONS) \
 	-I$(LIBINTLINCDIR) -DENABLE_NLS \
 	-DGETTEXT_PACKAGE=\"$(GETTEXT_PACKAGE)\"
 	#-DPIDGIN_NAME=\"Pidgin\" 
- 
+
+ifdef SOURCE_DATE_EPOCH
+    # We're doing a reproducible build
+    REPROCC = faketime -f "`date -d@$(SOURCE_DATE_EPOCH) +'%F %T'`" $(CC)
+    REPROSTRIP = faketime -f "`date -d@$(SOURCE_DATE_EPOCH) +'%F %T'`" i586-mingw32msvc-strip
+    REPROZIP = faketime -f "`date -d@$(SOURCE_DATE_EPOCH) +'%F %T'`" zip
+else
+    REPROCC = $(CC)
+    REPROSTRIP = i586-mingw32msvc-strip
+    REPROZIP = zip
+endif
+
 all: $(TARGET)
 	$(MAKE) -C po -f Makefile.mingw
 
 $(TARGET): otr-plugin.o ui.o dialogs.o gtk-ui.o gtk-dialog.o tooltipmenu.o
-	$(CC) -g -shared $(LDFLAGS) $^ -o $@ $(LDLIBS)
+	$(REPROCC) -g -shared $(LDFLAGS) $^ -o $@ $(LDLIBS)
 
 clean:
 	rm -f *.o
@@ -118,9 +128,12 @@ prepare_win32_export: all
 		cp -a $$i win32_export/locale/$$l/LC_MESSAGES/pidgin-otr.mo; \
 	done
 	cd win32_export; \
-	i586-mingw32msvc-strip *.exe *.dll; \
+	$(REPROSTRIP) *.exe *.dll; \
 	perl -pi -e 's/$$/\r/' README.Toolkit.txt Protocol-v3.html \
 		COPYING.txt COPYING.LIB.txt README.txt;
+	if [ -n "$(SOURCE_DATE_EPOCH)" ]; then \
+	    find win32_export -exec touch -d @$(SOURCE_DATE_EPOCH) {} \; ; \
+	fi
 
 installer: prepare_win32_export
 	makensis packaging/windows/pidgin-otr.nsi
@@ -130,7 +143,7 @@ installer: prepare_win32_export
 zip: prepare_win32_export
 	rm -f $(ZIPFILE)
 	cd win32_export; \
-	zip -r $(ZIPFILE) ./*; \
+	$(REPROZIP) -r $(ZIPFILE) ./*; \
 	mv $(ZIPFILE) ../;
 	rm -rf win32_export
 
