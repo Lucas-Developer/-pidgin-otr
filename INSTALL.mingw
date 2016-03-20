@@ -42,7 +42,7 @@ diff <(sha256sum libiconv-1.14.tar.gz \
 ccd00b4b115de3d2cd7f789f86d668b99bb2fe505d7a7edcff851ddd904ecd05  libgpg-error-1.20.tar.gz
 77e6ba99e10325b20d004c5b3290cdb21dbaddcbd54db893f44ed90216636c40  gpg-error-1.20-mingw.diff
 202bf109ccf2d614565c849f3e5687b94cde972167b35261e094252367627bc6  libgcrypt-1.6.5.tar.gz
-1d212dc65e87aaa83f9d666890982d5b91865a24426b1361666dfe48e106471a  gcrypt-1.6.5-mingw-repro.diff
+bbf9c24a8e34a3706332d542e4dbe6fc58ef19826fd34846c676646da1956dcb  gcrypt-1.6.5-mingw-repro.diff
 f5ce173f50690c2dc7fa91b9b5c80c7422cde3ee23610b53e0929557dd8ee67e  gtk+-bundle_2.24.10-20120208_win32.zip
 2c7523f0fefe89749c03b2b738ab9f7bd186da435be4762f1487eee31e77ffdd  pidgin-2.10.12.tar.bz2
 f1da4bb54d09a083e2130e60d874767c081923eb498e4a43d6418d25a4857ee8  pidgin-2.10.12-win32-bin.zip
@@ -97,7 +97,7 @@ EOD
   CFLAGS="-g -O2 -fstack-protector-all -Wstack-protector -fwrapv --param ssp-buffer-size=1 -fno-strict-overflow"
   LDFLAGS="-pie"
   export CFLAGS LDFLAGS
-  patch -p1 < ../gcrypt-1.6.5-mingw-repro.diff || exit 1
+  patch -T -p1 < ../gcrypt-1.6.5-mingw-repro.diff || exit 1
   w32root=/usr/i586-mingw32msvc ./autogen.sh --build-w32
   make || exit 1
   sudo make install || exit 1

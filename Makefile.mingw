@@ -143,7 +143,7 @@ installer: prepare_win32_export
 zip: prepare_win32_export
 	rm -f $(ZIPFILE)
 	cd win32_export; \
-	$(REPROZIP) -r $(ZIPFILE) ./*; \
+	$(REPROZIP) $(ZIPFILE) `find . -type f | LANG=C sort` ; \
 	mv $(ZIPFILE) ../;
 	rm -rf win32_export
 
