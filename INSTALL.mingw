@@ -13,7 +13,8 @@ sudo apt-get install mingw32 nsis faketime bison zip unzip tar \
 	wget diffutils findutils build-essential automake patch \
 	perl-base coreutils
 
-export SOURCE_DATE_EPOCH=`cat source_date_epoch`
+# Make sure the source_date_epoch file only has numbers in it
+export SOURCE_DATE_EPOCH=`tr -cd 0-9 < source_date_epoch`
 
 mkdir pidgin-otr-win32
 cd pidgin-otr-win32
