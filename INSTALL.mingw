@@ -7,6 +7,8 @@
 # sudo rm -rf /usr/i586-mingw32msvc
 sudo apt-get install mingw32 nsis
 
+export SOURCE_DATE_EPOCH=`cat source_date_epoch`
+
 mkdir pidgin-otr-win32
 cd pidgin-otr-win32
 
@@ -15,7 +17,7 @@ cd pidgin-otr-win32
           ftp://ftp.gnupg.org/gcrypt/libgpg-error/libgpg-error-1.20.tar.gz \
           https://otr.cypherpunks.ca/gpg-error-1.20-mingw.diff \
           ftp://ftp.gnupg.org/gcrypt/libgcrypt/libgcrypt-1.6.5.tar.gz \
-          https://otr.cypherpunks.ca/gcrypt-1.6.5-mingw.diff \
+          https://otr.cypherpunks.ca/gcrypt-1.6.5-mingw-repro.diff \
           http://ftp.gnome.org/pub/gnome/binaries/win32/gtk+/2.24/gtk+-bundle_2.24.10-20120208_win32.zip \
           http://sourceforge.net/projects/pidgin/files/Pidgin/2.10.12/pidgin-2.10.12.tar.bz2 \
           http://sourceforge.net/projects/pidgin/files/Pidgin/2.10.12/pidgin-2.10.12-win32-bin.zip \
@@ -29,7 +31,7 @@ diff <(sha256sum libiconv-1.14.tar.gz \
 	    libgpg-error-1.20.tar.gz \
 	    gpg-error-1.20-mingw.diff \
 	    libgcrypt-1.6.5.tar.gz \
-	    gcrypt-1.6.5-mingw.diff \
+	    gcrypt-1.6.5-mingw-repro.diff \
 	    gtk+-bundle_2.24.10-20120208_win32.zip \
 	    pidgin-2.10.12.tar.bz2 \
 	    pidgin-2.10.12-win32-bin.zip \
@@ -40,7 +42,7 @@ diff <(sha256sum libiconv-1.14.tar.gz \
 ccd00b4b115de3d2cd7f789f86d668b99bb2fe505d7a7edcff851ddd904ecd05  libgpg-error-1.20.tar.gz
 77e6ba99e10325b20d004c5b3290cdb21dbaddcbd54db893f44ed90216636c40  gpg-error-1.20-mingw.diff
 202bf109ccf2d614565c849f3e5687b94cde972167b35261e094252367627bc6  libgcrypt-1.6.5.tar.gz
-39311996df4aa735bd391262eb646bf53f4dad4eb259f512f8810377d63f6f7d  gcrypt-1.6.5-mingw.diff
+1d212dc65e87aaa83f9d666890982d5b91865a24426b1361666dfe48e106471a  gcrypt-1.6.5-mingw-repro.diff
 f5ce173f50690c2dc7fa91b9b5c80c7422cde3ee23610b53e0929557dd8ee67e  gtk+-bundle_2.24.10-20120208_win32.zip
 2c7523f0fefe89749c03b2b738ab9f7bd186da435be4762f1487eee31e77ffdd  pidgin-2.10.12.tar.bz2
 f1da4bb54d09a083e2130e60d874767c081923eb498e4a43d6418d25a4857ee8  pidgin-2.10.12-win32-bin.zip
@@ -82,7 +84,7 @@ EOD
   CFLAGS="-g -O2 -fstack-protector-all -Wstack-protector -fwrapv --param ssp-buffer-size=1 -fno-strict-overflow"
   LDFLAGS="-pie"
   export CFLAGS LDFLAGS
-  patch -p0 < ../gpg-error-1.20-mingw.diff
+  patch -p0 < ../gpg-error-1.20-mingw.diff || exit 1
   ./configure --enable-static --disable-shared --with-pic --host=i586-mingw32msvc --prefix=/usr/i586-mingw32msvc
   cp src/syscfg/lock-obj-pub.mingw32.h src/syscfg/lock-obj-pub.mingw32msvc.h
   make || exit 1
@@ -95,7 +97,7 @@ EOD
   CFLAGS="-g -O2 -fstack-protector-all -Wstack-protector -fwrapv --param ssp-buffer-size=1 -fno-strict-overflow"
   LDFLAGS="-pie"
   export CFLAGS LDFLAGS
-  patch -p1 < ../gcrypt-1.6.5-mingw.diff
+  patch -p1 < ../gcrypt-1.6.5-mingw-repro.diff || exit 1
   w32root=/usr/i586-mingw32msvc ./autogen.sh --build-w32
   make || exit 1
   sudo make install || exit 1
