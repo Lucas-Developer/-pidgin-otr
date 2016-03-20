@@ -11,7 +11,7 @@
 # obvious.
 sudo apt-get install mingw32 nsis faketime bison zip unzip tar \
 	wget diffutils findutils build-essential automake patch \
-	perl-base coreutils
+	perl-base coreutils gettext libtool
 
 # Make sure the source_date_epoch file only has numbers in it
 export SOURCE_DATE_EPOCH=`tr -cd 0-9 < source_date_epoch`
