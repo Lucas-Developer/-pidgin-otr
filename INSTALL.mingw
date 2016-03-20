@@ -5,7 +5,13 @@
 # You may want a clean mingw32 environment first:
 # sudo apt-get purge mingw32 mingw32-runtime mingw32-binutils
 # sudo rm -rf /usr/i586-mingw32msvc
-sudo apt-get install mingw32 nsis faketime
+
+# We need to have bison installed, or else gettext configures itself
+# differently and the binary comes out different.  The rest should be
+# obvious.
+sudo apt-get install mingw32 nsis faketime bison zip unzip tar \
+	wget diffutils findutils build-essential automake patch \
+	perl-base coreutils
 
 export SOURCE_DATE_EPOCH=`cat source_date_epoch`
 
