@@ -123,7 +123,6 @@ EOD
   cd libotr-4.1.1
   unset CFLAGS
   unset LDFLAGS
-  ./bootstrap
   ./configure --with-pic --host=i586-mingw32msvc \
         --prefix=/usr/i586-mingw32msvc \
         --enable-static --disable-shared \
