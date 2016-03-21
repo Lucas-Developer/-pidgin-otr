@@ -24,6 +24,11 @@ EXTRA_DIST=		dialogs.h gtk-dialog.h gtk-ui.h otr-plugin.h ui.h \
 
 DISTCLEANFILES=		intltool-extract intltool-merge intltool-update
 
+# Don't include a filename or timestamp in the dist .tar.gz file, so that
+# we can create a reproducible tarball (coupled with setting am__tar in
+# configure.ac)
+override GZIP_ENV='--best --no-name'
+
 source_date_epoch: FORCE
 	git log --format=%ct -1 > source_date_epoch
 FORCE:

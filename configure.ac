@@ -13,6 +13,14 @@ m4_ifdef([AM_PROG_AR], [AM_PROG_AR])
 
 AC_PROG_CC
 
+dnl Cause "make dist" to create a reproducible tarball (coupled with
+dnl setting GZIP_ENV in Makefile.am).  Note that this relies on the
+dnl file source_date_epoch existing, which is created by a rule in
+dnl Makefile.am.  That file is included in the tarball (so that we
+dnl have a timestamp on which to base reproducible binary builds *from*
+dnl the tarball), so it will be created before this command is run.
+AC_SUBST([am__tar],['( export SOURCE_DATE_EPOCH=`tr -cd 0-9 < source_date_epoch`; chmod -R u=rwX,go=rX "$$tardir"; find "$$tardir" -exec touch -d @$${SOURCE_DATE_EPOCH} {} \; -print0 | LC_ALL=C sort -z | $${TAR-tar} --owner=root --group=root --numeric-owner --no-recursion --null -T - -chf - )'])
+
 dnl We do not want to create a .a for the plugin, so disable by default.
 LT_INIT([disable-static])
 
