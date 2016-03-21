@@ -142,7 +142,7 @@ installer: prepare_win32_export
 zip: prepare_win32_export
 	rm -f $(ZIPFILE)
 	cd win32_export; \
-	TZ=UTC zip -o -X $(ZIPFILE) `find . -type f | LANG=C sort` ; \
+	TZ=UTC zip -o -X $(ZIPFILE) `find . -type f | LC_ALL=C sort` ; \
 	mv $(ZIPFILE) ../;
 	rm -rf win32_export
 
